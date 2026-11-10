@@ -35,6 +35,16 @@ jobs:
               for (const id of s.connection?.endpointIds || []) if (!eps.has(id)) throw Error('Missing endpoint ' + id);
             }
           }
+          const apps = new Set(m.applications.map(a=>a.id));
+          const ids = new Set();
+          for (const x of m.externalMappings || []) {
+            if (ids.has(x.id)) throw Error('Duplicate external mapping ID ' + x.id);
+            ids.add(x.id);
+            if (!apps.has(x.targetApp)) throw Error('Unknown destination application ' + x.targetApp);
+            if (caps.get(x.targetCapability)?.provider !== x.targetApp) throw Error('Mapping capability ownership mismatch ' + x.id);
+            if (!x.fields?.length) throw Error('Mapping has no example fields ' + x.id);
+            if (x.status !== 'example') throw Error('External mapping requires explicit example status ' + x.id);
+          }
           if ('integrations' in m) throw Error('Old integration catalogue not removed');
           console.log('Architecture references validated');
           NODE

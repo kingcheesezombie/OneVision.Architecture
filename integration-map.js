@@ -25,7 +25,7 @@ class IntegrationMap{
   this.root=root;this.model=m;this.navigate=navigate;this.filters=filters;
   this.selection=null;this.zoom=1;this.allPairs=pairs(m);
   this.layers={workflows:true,external:true,planned:true,standard:true};this.entityClass='all';
-  root.addEventListener('click',e=>{if(e.target.closest('[data-map-action],[data-kind],[data-map-node],[data-map-pair],[data-map-workflow]')){e.stopPropagation();this.click(e)}});
+  root.addEventListener('click',e=>{if(e.target.closest('[data-map-action],[data-kind],[data-map-node],[data-map-pair],[data-map-workflow],[data-map-source]')){e.stopPropagation();this.click(e)}});
   root.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.closest('[data-map-node],[data-map-pair],[data-map-source]')){e.preventDefault();this.click({target:e.target})}});
   root.addEventListener('change',e=>{
    const filter=e.target.closest('[data-map-filter]');if(filter){this.layers[filter.dataset.mapFilter]=filter.checked;this.render();return}

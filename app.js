@@ -1,90 +1,133 @@
-(()=>{'use strict';
+(()=>{
+'use strict';
 const $=id=>document.getElementById(id);
-const state={view:'landscape',search:'',status:'all',model:null};
-const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const state={model:null,view:'landscape',kind:null,id:null,search:'',status:'all'};
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const app=id=>state.model.applications.find(a=>a.id===id);
 const cap=id=>state.model.capabilities.find(c=>c.id===id);
-const ep=id=>(state.model.endpoints||[]).find(e=>e.id===id);
-const endpointList=ids=>(ids||[]).map(id=>{const e=ep(id);return e?'<div class="endpoint"><span class="http-method">'+escape(e.method)+'</span> <code>'+escape(e.path)+'</code><p>'+escape(e.purpose)+'</p><span class="meta">'+escape(e.owner)+' · '+escape(e.status)+'</span></div>':''}).join('');
-const connectionMarkup=s=>{const x=s.connection||{kind:'unspecified',endpointIds:[]};return '<div class="step-contract"><span class="meta">'+escape(x.kind==='internal'?'INTERNAL CAPABILITY':x.kind==='api-handler'?'RECEIVING API HANDLER':x.kind==='api'?'API CONTRACT':'CONTRACT UNDOCUMENTED')+'</span>'+endpointList(x.endpointIds)+(x.note?'<p class="contract-note">'+escape(x.note)+'</p>':'')+'</div>'};
-const textItems=items=>items?.length?'<ul class="compact-list">'+items.map(x=>'<li>'+escape(x)+'</li>').join('')+'</ul>':'<p class="meta">Not applicable or not yet documented.</p>';
-
-const relationships=()=>{const out=new Map();for(const w of state.model.workflows){const owners=[...new Set(w.steps.map(s=>cap(s.capability)?.provider).filter(Boolean))];for(let i=0;i<owners.length;i++)for(let j=i+1;j<owners.length;j++){const a=owners[i],b=owners[j],k=[a,b].sort().join('|');const v=out.get(k)||{a,b,workflows:[]};v.workflows.push(w);out.set(k,v)}}return [...out.values()]};
-const appWorkflows=id=>state.model.workflows.filter(w=>w.steps.some(s=>cap(s.capability)?.provider===id));
-const capWorkflows=id=>state.model.workflows.filter(w=>w.steps.some(s=>s.capability===id));
-const workflowMatches=w=>matches([w.name,w.summary,...w.steps.map(s=>{const c=cap(s.capability);return [c?.name,c?.summary,c?.provider,...(s.connection?.endpointIds||[]).map(id=>ep(id)?.path)].join(' ')})].join(' '))&&(state.status==='all'||w.status===state.status);
-const matches=s=>!state.search||s.toLowerCase().includes(state.search);
-
-const badge=status=>'<span class="pill '+(status==='planned'?'planned':'')+'">'+(status==='planned'?'Planned':'Established')+'</span>';
-
-const setHeading=(h,d)=>{$('heading').textContent=h;$('intro').textContent=d};
-function card(title,subtitle,type,id,status){return '<button class="item" data-kind="'+type+'" data-id="'+escape(id)+'"><div class="meta">'+escape(subtitle)+'</div><strong>'+escape(title)+'</strong>'+(status?badge(status):'')+'</button>'}
+const ep=id=>state.model.endpoints.find(e=>e.id===id);
+const workflowsForApp=id=>state.model.workflows.filter(w=>w.steps.some(s=>cap(s.capability)?.provider===id));
+const workflowsForCap=id=>state.model.workflows.filter(w=>w.steps.some(s=>s.capability===id));
+const kinds={application:'applications',capability:'capabilities',workflow:'workflows'};
+const singular={applications:'application',capabilities:'capability',workflows:'workflow'};
+const plural={landscape:'Landscape',applications:'Applications',capabilities:'Capabilities',workflows:'Workflows'};
+const collection=view=>view==='applications'?state.model.applications:view==='capabilities'?state.model.capabilities:view==='workflows'?state.model.workflows:[];
+const label=(kind,id)=>kind==='application'?app(id)?.name:kind==='capability'?cap(id)?.name:state.model.workflows.find(w=>w.id===id)?.name;
+const statusBadge=s=>'<span class="pill '+(s==='planned'?'planned':'')+'">'+(s==='planned'?'Planned':'Established')+'</span>';
+const item=(kind,id,title,meta,desc,status)=>'<button class="item" data-kind="'+kind+'" data-id="'+esc(id)+'"><span class="meta">'+esc(meta)+'</span><strong>'+esc(title)+'</strong>'+(desc?'<p>'+esc(desc)+'</p>':'')+(status?statusBadge(status):'')+'</button>';
+function nav(view,kind=null,id=null){
+ state.view=view;state.kind=kind;state.id=id;state.search='';$('search').value='';$('status').value='all';state.status='all';
+ const hash=kind?'#'+view+'/'+encodeURIComponent(id):'#'+view;
+ if(location.hash!==hash)history.pushState(null,'',hash);
+ render();window.scrollTo(0,0);
+}
+function fromHash(){
+ const [view,raw]=decodeURIComponent(location.hash.slice(1)).split('/');
+ const valid=['landscape','applications','capabilities','workflows'].includes(view)?view:'landscape';
+ const kind=singular[valid]||null;
+ const obj=raw?collection(valid).find(x=>x.id===raw):null;
+ state.view=valid;state.kind=obj?kind:null;state.id=obj?obj.id:null;
+ render();
+}
+function criteria(v){return (state.status==='all'||(v.status||'established')===state.status)&&(!state.search||[v.name,v.tagline,v.summary,v.description,v.nature,v.provider,v.id].filter(Boolean).join(' ').toLowerCase().includes(state.search));}
+function renderSidebar(){
+ document.querySelectorAll('[data-view]').forEach(b=>{b.classList.toggle('active',b.dataset.view===state.view);b.setAttribute('aria-current',b.dataset.view===state.view?'page':'false')});
+ $('browse-name').textContent=state.view==='landscape'?'':plural[state.view];
+ const browse=$('browse');
+ if(state.view==='landscape'){browse.innerHTML='<p class="browse-hint">Select an application or workflow to explore it in full.</p>';return}
+ const group=collection(state.view);
+ let out='';
+ if(state.kind)out+='<button class="browse-back" data-list="'+state.view+'">← All '+esc(plural[state.view])+'</button>';
+ if(state.view==='capabilities'){
+  for(const a of state.model.applications){
+   const items=group.filter(c=>c.provider===a.id);
+   if(!items.length)continue;
+   out+='<div class="browse-group">'+esc(a.id)+'</div>'+items.map(c=>sidebarItem('capability',c)).join('');
+  }
+ }else out=out+group.map(x=>sidebarItem(singular[state.view],x)).join('');
+ browse.innerHTML=out;
+}
+function sidebarItem(kind,x){
+ return '<button class="browse-item '+(state.kind===kind&&state.id===x.id?'selected':'')+'" data-kind="'+kind+'" data-id="'+esc(x.id)+'" '+(state.kind===kind&&state.id===x.id?'aria-current="page"':'')+'>'+esc(x.name)+'</button>';
+}
+function setHeader(title,subtitle){$('heading').textContent=title;$('intro').textContent=subtitle;$('section-name').textContent=plural[state.view].toUpperCase()}
+function viewCard(kind,x){
+ return item(kind,x.id,x.name,kind==='application'?x.tagline:kind==='capability'?x.provider:x.participants.join(' + '),x.description||x.summary,x.status);
+}
+function renderList(){
+ $('toolbar').hidden=false;
+ setHeader(plural[state.view],state.view==='applications'?'What each application owns and how it connects.':state.view==='capabilities'?'Reusable functions owned by individual applications.':'Functional outcomes assembled from named capabilities.');
+ const list=collection(state.view).filter(criteria);
+ const description=state.view==='workflows'?'Select a workflow to see its complete capability sequence and API contracts.':'Select one item to open its full documentation.';
+ $('content').innerHTML='<div class="panel"><h2>Browse '+esc(plural[state.view])+'</h2><p class="sub">'+description+'</p><div class="items">'+list.map(x=>viewCard(singular[state.view],x)).join('')+'</div>'+(list.length?'':'<p>No matches.</p>')+'</div>';
+}
+function linked(kind,id,title,context){return '<button class="link-row" data-kind="'+kind+'" data-id="'+esc(id)+'"><span><strong>'+esc(title)+'</strong>'+(context?'<small>'+esc(context)+'</small>':'')+'</span><span class="link-arrow">›</span></button>'}
+function section(title,body){return '<section class="panel detail-section"><h2>'+esc(title)+'</h2>'+body+'</section>'}
+function applicationDetail(a){
+ setHeader(a.name,a.description);const cs=state.model.capabilities.filter(c=>c.provider===a.id),ws=workflowsForApp(a.id);
+ let html='<div class="detail-lead"><span class="meta">'+esc(a.tagline)+'</span>'+statusBadge(a.status)+'</div>';
+ html+=section('Application purpose','<p>'+esc(a.nature||a.description)+'</p><p>'+esc(a.connectionRole||'')+'</p>');
+ const src=a.sourceConfiguration||[];
+ html+=section('Source configuration capabilities',src.length?'<div class="detail-grid">'+src.map(s=>'<div class="source-profile"><strong>'+esc(s.type)+'</strong><p>'+esc(s.purpose)+'</p><span class="meta">'+esc(s.detail)+'</span></div>').join('')+'</div>':'<p class="muted">No source configuration capability documented.</p>');
+ html+=section('Inherent capabilities',cs.length?cs.map(c=>linked('capability',c.id,c.name,c.summary)).join(''):'<p class="muted">No capabilities documented.</p>');
+ html+=section('Participating workflows',ws.length?ws.map(w=>linked('workflow',w.id,w.name,w.status==='planned'?'Planned':'Established')).join(''):'<p class="muted">No workflows documented.</p>');
+ return html;
+}
+function capabilityDetail(c){
+ setHeader(c.name,c.summary);
+ const ws=workflowsForCap(c.id);
+ let html='<div class="detail-lead"><span class="meta">CANONICAL CAPABILITY · '+esc(c.id)+'</span>'+statusBadge(c.status)+'</div>';
+ html+=section('Capability definition','<p>'+esc(c.summary)+'</p><div class="fact"><span>Owned by</span>'+linked('application',c.provider,app(c.provider)?.name||c.provider,c.provider)+'</div><div class="fact"><span>Classification</span><p>'+esc((c.tags||[]).join(' · '))+'</p></div>');
+ html+=section('Used in workflows',ws.length?ws.map(w=>linked('workflow',w.id,w.name,w.summary)).join(''):'<p class="muted">Not yet referenced in a workflow.</p>');
+ return html;
+}
+function contract(s){
+ const c=s.connection||{kind:'unspecified',endpointIds:[]};
+ const label=c.kind==='internal'?'Internal application capability':c.kind==='api-handler'?'Receiving API handler':c.kind==='api'?'API invocation':'Contract not yet specified';
+ let h='<div class="contract"><h3>'+esc(label)+'</h3>';
+ for(const id of c.endpointIds||[]){const e=ep(id);if(!e)continue;h+='<div class="endpoint"><span class="http-method">'+esc(e.method)+'</span> <code>'+esc(e.path)+'</code><p>'+esc(e.purpose)+'</p><span class="meta">Owned by '+esc(e.owner)+'</span></div>'}
+ if(c.note)h+='<p class="contract-note">'+esc(c.note)+'</p>';
+ return h+'</div>';
+}
+function workflowDetail(w){
+ setHeader(w.name,w.summary);
+ let h='<div class="detail-lead"><span class="meta">CAPABILITY WORKFLOW · '+esc(w.participants.join(' + '))+'</span>'+statusBadge(w.status)+'</div>';
+ h+=section('Functional sequence','<p class="muted">Each step reuses its owning application’s canonical capability. API information documents the interaction, not deployment configuration.</p><div class="workflow-steps">'+w.steps.map((s,i)=>{const c=cap(s.capability);return '<div class="workflow-step"><div class="step-number">'+(i+1)+'</div><div class="workflow-body"><div class="step-box"><span class="step-provider">'+esc(c.provider)+' · '+esc(c.id)+'</span>'+linked('capability',c.id,c.name,c.summary)+'</div>'+contract(s)+'</div></div>'}).join('')+'</div>');
+ h+=section('Participating applications',w.participants.map(id=>linked('application',id,app(id)?.name||id,app(id)?.tagline)).join(''));
+ return h;
+}
 function renderLandscape(){
- setHeading('Application landscape','Explore applications and their workflow-derived relationships.');
- const apps=state.model.applications.filter(a=>matches([a.id,a.name,a.tagline,a.description].join(' ')));
- let html='<div class="panel"><h2>The OneVision ecosystem</h2><p class="sub">Select an application to explore its responsibilities, inherent capabilities and workflows.</p><div class="landscape">';
- for(const a of apps)html+='<button class="node '+(a.group==='hub'?'hub':a.group==='standard'?'standard':a.group==='supporting'?'supporting':'')+'" data-kind="application" data-id="'+escape(a.id)+'"><strong>'+escape(a.id==='ONEVISION'?'OneVision':a.id==='UI'?'OneVision.UI':a.id)+'</strong><span>'+escape(a.tagline)+'</span><small>'+escape(a.description)+'</small></button>';
- html+='</div><div class="hint">Application relationships come from workflows; the design system is a cross-cutting standard rather than a runtime connection.</div></div>';
- const list=relationships().map(rel=>({...rel,workflows:rel.workflows.filter(workflowMatches)})).filter(rel=>rel.workflows.length);
- html+='<div class="sectiontitle">Workflow-derived relationships ('+list.length+')</div><div class="connections">';
- for(const rel of list)html+='<div class="item"><div class="flowline"><span class="chip">'+escape(rel.a)+'</span><span class="arrow">↔</span><span class="chip">'+escape(rel.b)+'</span></div><strong>'+rel.workflows.length+' workflow'+(rel.workflows.length===1?'':'s')+'</strong>'+rel.workflows.map(w=>card(w.name,w.status==='planned'?'Planned workflow':'Capability workflow','workflow',w.id,w.status)).join('')+'</div>';
- html+='</div>';$('content').innerHTML=html;
+ $('toolbar').hidden=false;
+ setHeader('Application landscape','Explore the OneVision ecosystem and workflow-derived relationships.');
+ const apps=state.model.applications.filter(criteria);
+ let h='<div class="panel"><h2>The OneVision ecosystem</h2><p class="sub">Choose an application for its complete documentation.</p><div class="landscape">'+apps.map(a=>'<button class="node '+(a.group==='hub'?'hub':a.group==='standard'?'standard':a.group==='supporting'?'supporting':'')+'" data-kind="application" data-id="'+esc(a.id)+'"><strong>'+esc(a.id==='ONEVISION'?'OneVision':a.id==='UI'?'OneVision.UI':a.id)+'</strong><span>'+esc(a.tagline)+'</span><small>'+esc(a.description)+'</small></button>').join('')+'</div><p class="hint">OneVision.UI is a cross-cutting design standard, not a data integration.</p></div>';
+ h+='<div class="panel"><h2>Capability workflows</h2><p class="sub">The following workflows define relationships across applications.</p><div class="items">'+state.model.workflows.filter(criteria).map(w=>viewCard('workflow',w)).join('')+'</div></div>';
+ $('content').innerHTML=h;
 }
-function renderApplications(){
- setHeading('Applications','Application responsibilities, source configuration and inherent capabilities.');
- const apps=state.model.applications.filter(a=>matches([a.id,a.name,a.description,a.nature].join(' '))&&(state.status==='all'||(a.status||'established')===state.status));
- $('content').innerHTML='<div class="items">'+apps.map(a=>'<button class="item" data-kind="application" data-id="'+escape(a.id)+'"><div class="meta">'+escape(a.tagline)+'</div><strong>'+escape(a.name)+'</strong><p>'+escape(a.description)+'</p></button>').join('')+'</div>';
+function render(){
+ if(!state.model)return;
+ renderSidebar();$('updated').textContent='Updated '+state.model.updated;
+ if(state.view==='landscape'){renderLandscape();return}
+ if(!state.kind){renderList();return}
+ $('toolbar').hidden=true;
+ const target=collection(state.view).find(x=>x.id===state.id);
+ if(!target){state.kind=null;state.id=null;renderList();return}
+ const breadcrumb='<button class="crumb" data-list="'+state.view+'">← '+esc(plural[state.view])+'</button>';
+ const body=state.kind==='application'?applicationDetail(target):state.kind==='capability'?capabilityDetail(target):workflowDetail(target);
+ $('content').innerHTML=breadcrumb+'<div class="focused-detail">'+body+'</div>';
 }
-function renderCapabilities(){
- setHeading('Capability catalogue','The functional capabilities made available across the OneVision suite.');
- let list=state.model.capabilities.filter(c=>matches([c.id,c.name,c.summary,c.provider,...(c.tags||[])].join(' '))&&(state.status==='all'||(c.status||'established')===state.status));
- let html='<div class="panel"><h2>Capabilities</h2><p class="sub">One reusable definition per capability, irrespective of how many applications consume it.</p><div class="items">';
- for(const c of list)html+='<button class="item" data-kind="capability" data-id="'+escape(c.id)+'"><span class="meta">'+escape(c.provider)+' · '+escape(c.id)+'</span><strong>'+escape(c.name)+'</strong><p>'+escape(c.summary)+'</p>'+(c.status?badge(c.status):'')+'</button>';
- html+='</div></div>';$('content').innerHTML=html;
-}
-
-function workflowCard(w){
- return '<button class="item" data-kind="workflow" data-id="'+escape(w.id)+'"><div class="meta">CAPABILITY WORKFLOW · '+escape(w.participants.join(' + '))+'</div><strong>'+escape(w.name)+'</strong><p>'+escape(w.summary)+'</p><span class="meta">'+w.steps.length+' steps · Each capability belongs to its provider</span></button>';
-}
-function renderWorkflows(){
- setHeading('Capability workflows','How inherent capabilities from different applications combine to deliver a functional outcome.');
- const list=state.model.workflows.filter(workflowMatches);
- let html='<div class="panel"><h2>Cross-application capability sequences</h2><p class="sub">Select a workflow to examine the ordered capabilities and their owning applications. This describes functionality, not operational execution.</p><div class="items">';
- for(const w of list)html+=workflowCard(w);
- html+='</div></div>';
- for(const w of list)html+='<div class="panel"><h2>'+escape(w.name)+'</h2><p class="sub">'+escape(w.summary)+'</p><div class="workflow-steps">'+w.steps.map((s,index)=>{const c=cap(s.capability);return '<div class="workflow-step"><div class="step-number">'+(index+1)+'</div><button class="step-box" data-kind="capability" data-id="'+escape(c.id)+'"><span class="step-provider">'+escape(c.provider)+' · OWNED CAPABILITY</span><strong>'+escape(c.name)+'</strong><p>'+escape(c.summary)+'</p></button>'+connectionMarkup(s)+'</div>'}).join('')+'</div><div class="hint">These are documented functional dependencies, not runtime statuses or deployment connections.</div></div>';
- $('content').innerHTML=html;
-}
-function render(){const m=state.model;$('stats').innerHTML=[['Applications',m.applications.length],['Capabilities',m.capabilities.length],['Workflows',(m.workflows||[]).length]].map(([n,v])=>'<div class="stat"><strong>'+v+'</strong><small>'+n+'</small></div>').join('');$('updated').textContent='Updated '+m.updated;document.querySelectorAll('[data-view]').forEach(n=>n.classList.toggle('active',n.dataset.view===state.view));({landscape:renderLandscape,applications:renderApplications,capabilities:renderCapabilities,workflows:renderWorkflows}[state.view])()}
-function openDetail(kind,id){
- const m=state.model;let html='';
- if(kind==='application'){
-  const a=app(id);if(!a)return;
-  const cs=m.capabilities.filter(c=>c.provider===id),ws=appWorkflows(id);
-  html='<h2>'+escape(a.name)+'</h2><div class="meta">'+escape(a.tagline)+'</div><p>'+escape(a.description)+'</p>';
-  if(a.status)html+=badge(a.status);
-  html+='<h3>Nature of application</h3><p>'+escape(a.nature||'Not documented')+'</p><h3>Role in connections</h3><p>'+escape(a.connectionRole||'Not documented')+'</p><h3>Source configuration capabilities</h3>';
-  if(a.sourceConfiguration?.length)for(const s of a.sourceConfiguration)html+='<div class="source-profile"><strong>'+escape(s.type)+'</strong><p>'+escape(s.purpose)+'</p><span class="meta">'+escape(s.detail)+'</span></div>';else html+='<p class="meta">No source configuration documented.</p>';
-  html+='<h3>Inherent capabilities</h3>'+(cs.map(c=>card(c.name,c.id,'capability',c.id,c.status)).join('')||'<p>None catalogued.</p>');
-  html+='<h3>Participating workflows</h3>'+(ws.map(w=>card(w.name,w.id,'workflow',w.id,w.status)).join('')||'<p>None catalogued.</p>');
- }else if(kind==='capability'){
-  const c=cap(id);if(!c)return;const ws=capWorkflows(id);
-  html='<h2>'+escape(c.name)+'</h2><div class="meta">Owned by '+escape(c.provider)+' · '+escape(c.id)+'</div><p>'+escape(c.summary)+'</p><h3>Classification</h3><p>'+escape((c.tags||[]).join(' · '))+'</p><h3>Used in workflows</h3>'+(ws.map(w=>card(w.name,w.id,'workflow',w.id,w.status)).join('')||'<p>Not yet referenced.</p>');
- }else if(kind==='workflow'){
-  const w=m.workflows.find(x=>x.id===id);if(!w)return;
-  html='<h2>'+escape(w.name)+'</h2><div class="meta">CAPABILITY WORKFLOW · '+escape(w.participants.join(' + '))+'</div><p>'+escape(w.summary)+'</p><h3>Canonical capabilities</h3>';
-  for(let n=0;n<w.steps.length;n++){const s=w.steps[n],c=cap(s.capability);if(!c)continue;html+='<div class="workflow-step"><div class="step-number">'+(n+1)+'</div><button class="step-box" data-kind="capability" data-id="'+escape(c.id)+'"><span class="step-provider">'+escape(c.provider)+' · '+escape(c.id)+'</span><strong>'+escape(c.name)+'</strong><p>'+escape(c.summary)+'</p></button>'+connectionMarkup(s)+'</div>'}
- }
- $('detail-body').innerHTML=html;$('detail').classList.remove('hidden');
-}
-document.addEventListener('click',e=>{const view=e.target.closest('[data-view]');if(view){state.view=view.dataset.view;$('detail').classList.add('hidden');render();return}const card=e.target.closest('[data-kind]');if(card)openDetail(card.dataset.kind,card.dataset.id)});
+document.addEventListener('click',e=>{
+ const section=e.target.closest('[data-view]');if(section){nav(section.dataset.view);return}
+ const back=e.target.closest('[data-list]');if(back){nav(back.dataset.list);return}
+ const link=e.target.closest('[data-kind]');if(link){nav(kinds[link.dataset.kind],link.dataset.kind,link.dataset.id)}
+});
 $('search').addEventListener('input',e=>{state.search=e.target.value.trim().toLowerCase();render()});
 $('status').addEventListener('change',e=>{state.status=e.target.value;render()});
-$('close').addEventListener('click',()=>$('detail').classList.add('hidden'));
-document.addEventListener('keydown',e=>{if(e.key==='Escape')$('detail').classList.add('hidden')});
-fetch('data/architecture.json').then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}).then(m=>{if(!m.applications||!m.capabilities||!m.workflows||!m.endpoints)throw new Error('Incomplete model');
- const caps=new Map(m.capabilities.map(c=>[c.id,c])),eps=new Map(m.endpoints.map(e=>[e.id,e]));
-
- for(const w of m.workflows){for(const s of w.steps){if(!caps.has(s.capability))throw new Error('Unknown workflow capability: '+s.capability);if(s.description)throw new Error('Duplicate capability description in workflow: '+s.id);for(const id of s.connection?.endpointIds||[])if(!eps.has(id))throw new Error('Unknown endpoint: '+id)}const owners=[...new Set(w.steps.map(s=>caps.get(s.capability).provider))];if(owners.some(x=>!w.participants.includes(x)))throw new Error('Participants mismatch: '+w.id)}
- state.model=m;render()}).catch(e=>{$('content').innerHTML='<div class="panel">Unable to load architecture catalogue: '+escape(e.message)+'</div>'});
+window.addEventListener('popstate',fromHash);
+window.addEventListener('hashchange',fromHash);
+fetch('data/architecture.json').then(r=>{if(!r.ok)throw Error('HTTP '+r.status);return r.json()}).then(m=>{
+ const cs=new Map(m.capabilities.map(c=>[c.id,c])),es=new Set(m.endpoints.map(e=>e.id));
+ for(const w of m.workflows)for(const s of w.steps){if(!cs.has(s.capability))throw Error('Unknown capability '+s.capability);if(s.description)throw Error('Duplicate capability description '+s.id);for(const id of s.connection?.endpointIds||[])if(!es.has(id))throw Error('Unknown endpoint '+id)}
+ state.model=m;fromHash();
+}).catch(e=>{$('content').innerHTML='<div class="panel">Unable to load architecture: '+esc(e.message)+'</div>'});
 })();

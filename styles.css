@@ -133,3 +133,26 @@ header p{max-width:850px}
 .map-step-list>div{display:flex;align-items:center;gap:12px}
 .map-step-index{width:27px;height:27px;flex-shrink:0;border-radius:50%;background:#e6f0fa;color:#376c95;display:grid;place-items:center;font-weight:700;font-size:12px}
 @media(max-width:800px){.integration-map-panel{padding:15px}.map-inspect-top{grid-template-columns:1fr}.map-stage{overflow-x:auto}.integration-svg{min-width:600px}.map-tools{flex-wrap:wrap}}
+
+/* v0.7 external entity mapping overlay and layer controls */
+.map-layers{display:flex;align-items:center;gap:13px;flex-wrap:wrap;border:1px solid #e0e8f1;border-radius:9px;padding:12px 14px;margin-top:17px;background:#f8fbff}
+.map-filter-label{font-size:10px;font-weight:750;letter-spacing:1px;color:#617892;margin-right:3px}
+.map-toggle{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#425c77;cursor:pointer;white-space:nowrap}
+.map-toggle input{accent-color:#277bb0;width:15px;height:15px;min-width:15px;margin:0}
+.map-class-filter{font-size:12px;color:#425c77;margin-left:auto;white-space:nowrap}
+.map-class-filter select{font-size:12px;padding:7px 9px;margin-left:6px;max-width:200px}
+.map-source rect{fill:#f3eafe;stroke:#9e76ba;stroke-width:1.7}
+.map-source:hover rect,.map-source.selected rect,.map-source:focus rect{fill:#ead9f9;stroke:#8552a3;stroke-width:2.8}
+.map-source{cursor:pointer;transition:opacity .2s}
+.map-source-name{font-weight:700;font-size:13px;fill:#4e3267;pointer-events:none}
+.map-source-meta{font-size:9px;fill:#805e95;pointer-events:none}
+.map-source-line{fill:none;stroke:#9e76ba;stroke-width:2.4;stroke-dasharray:5 5;opacity:.85}
+.map-source-link{cursor:pointer}
+.map-source-link:hover .map-source-line,.map-source-link:focus .map-source-line{stroke-width:4.4}
+.map-source-link.muted,.map-source.muted{opacity:.12}
+.map-key-line.source{border-color:#9e76ba;border-top-style:dashed}
+.map-field-grid{display:grid;gap:7px;margin:14px 0}
+.map-field-grid>div{display:grid;grid-template-columns:minmax(90px,.8fr) 18px minmax(0,1.6fr);align-items:center;gap:8px;padding:11px 12px;background:#f8fafd;border:1px solid #e4e9f2;border-radius:7px;color:#4b5f78;font-size:12px}
+.map-field-grid code{font-size:12px;color:#644b83;overflow-wrap:anywhere}
+@media(max-width:1100px){.map-class-filter{margin-left:0}}
+@media(max-width:700px){.map-layers{gap:11px}.map-class-filter{width:100%}.map-class-filter select{max-width:190px}.integration-svg{min-width:850px}}

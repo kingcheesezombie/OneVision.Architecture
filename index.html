@@ -1,13 +1,27 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#101828"><meta name="description" content="OneVision capability and integration architecture"><title>OneVision | Architecture Explorer</title><link rel="stylesheet" href="styles.css"></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#101828"><meta name="description" content="OneVision capability and workflow architecture"><title>OneVision | Architecture Explorer</title><link rel="stylesheet" href="styles.css"></head>
 <body>
 <div class="shell">
-<aside class="sidebar"><div class="brand"><span class="symbol">◈</span><div><strong>OneVision</strong><small>Architecture Explorer</small></div></div><div class="navlabel">EXPLORE</div><nav><button class="active" data-view="landscape">▦ &nbsp; Landscape</button><button data-view="applications">▦ &nbsp; Applications</button><button data-view="capabilities">▤ &nbsp; Capabilities</button><button data-view="workflows">◇ &nbsp; Workflows</button></nav><div class="sidefoot">● Reference architecture<br><small>No operational connections</small></div></aside>
-<main><header><div><div class="eyebrow">ONEVISION / ARCHITECTURE</div><h1 id="heading">Application landscape</h1><p id="intro">Explore how OneVision applications relate and the capabilities they provide.</p></div><a class="github" target="_blank" rel="noopener" href="https://github.com/kingcheesezombie/OneVision.Architecture">GitHub ↗</a></header>
-<section class="stats" id="stats"></section>
-<div class="toolbar"><input type="search" id="search" placeholder="Search applications, capabilities, workflows…" aria-label="Search"><label>Relationship <select id="status"><option value="all">All</option><option value="established">Established</option><option value="planned">Planned</option></select></label></div>
-<section id="content" aria-live="polite"></section><footer>OneVision · Capability documentation, not an operational view · <span id="updated"></span></footer></main>
-<aside class="detail hidden" id="detail"><div class="detail-head"><strong>DETAILS</strong><button id="close" aria-label="Close details">✕</button></div><div id="detail-body"></div></aside>
-</div><script src="app.js" defer></script>
+<aside class="sidebar" aria-label="Architecture navigation">
+  <div class="brand"><span class="symbol">◈</span><div><strong>OneVision</strong><small>Architecture Explorer</small></div></div>
+  <div class="navlabel">EXPLORE</div>
+  <nav aria-label="Main sections">
+    <button data-view="landscape">▦ &nbsp; Landscape</button>
+    <button data-view="applications">▦ &nbsp; Applications</button>
+    <button data-view="capabilities">▤ &nbsp; Capabilities</button>
+    <button data-view="workflows">◇ &nbsp; Workflows</button>
+  </nav>
+  <div class="navlabel browse-label">BROWSE <span id="browse-name"></span></div>
+  <div id="browse" class="browse" aria-label="Items in selected section"></div>
+  <div class="sidefoot">● Reference architecture<br><small>Functional documentation, not monitoring</small></div>
+</aside>
+<main>
+  <header><div><div class="eyebrow">ONEVISION / <span id="section-name">LANDSCAPE</span></div><h1 id="heading">Application landscape</h1><p id="intro">Explore capabilities and their workflow relationships.</p></div><a class="github" target="_blank" rel="noopener" href="https://github.com/kingcheesezombie/OneVision.Architecture">GitHub ↗</a></header>
+  <div class="toolbar" id="toolbar"><input type="search" id="search" placeholder="Search the catalogue…" aria-label="Search catalogue"><label>Status <select id="status"><option value="all">All</option><option value="established">Established</option><option value="planned">Planned</option></select></label></div>
+  <section id="content" aria-live="polite"></section>
+  <footer>OneVision · Capability reference architecture · <span id="updated"></span></footer>
+</main>
+</div>
+<script src="app.js" defer></script>
 </body></html>

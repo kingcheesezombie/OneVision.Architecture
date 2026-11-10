@@ -156,3 +156,36 @@ header p{max-width:850px}
 .map-field-grid code{font-size:12px;color:#644b83;overflow-wrap:anywhere}
 @media(max-width:1100px){.map-class-filter{margin-left:0}}
 @media(max-width:700px){.map-layers{gap:11px}.map-class-filter{width:100%}.map-class-filter select{max-width:190px}.integration-svg{min-width:850px}}
+
+/* v0.8 — legible three-column lanes, no crossing connectors */
+.lane-scroll{overflow-x:auto;margin-top:18px;border:1px solid #e1e8f1;border-radius:12px;background:#f9fbfe}
+.lane-diagram{min-width:680px}
+.lane-head,.lane-row{display:grid;grid-template-columns:minmax(155px,1fr) minmax(150px,.8fr) minmax(225px,1.25fr);align-items:stretch;column-gap:0}
+.lane-head{background:#edf3fa;border-bottom:1px solid #dce7f3}
+.lane-head span{padding:15px 20px;color:#71849b;letter-spacing:1px;font-size:10px;font-weight:800}
+.lane-head span:nth-child(2){text-align:center}
+.lane-row{min-height:116px;border-bottom:1px solid #e3eaf3;transition:opacity .15s}
+.lane-row:last-child{border-bottom:0}
+.lane-row:nth-of-type(2n){background:#fff}
+.lane-row.dimmed{opacity:.25}
+.lane-cell{position:relative;padding:17px 21px;display:flex;flex-direction:column;justify-content:center;gap:8px;min-width:0}
+.lane-app-cell{align-items:center;border-left:1px solid #e7edf5;border-right:1px solid #e7edf5}
+.lane-source,.lane-workflow,.lane-app{position:relative;z-index:1;text-align:left;width:100%;border-radius:8px;padding:11px 12px;display:flex;flex-direction:column;gap:5px;cursor:pointer;transition:background .15s,border-color .15s}
+.lane-source{border:1px solid #b994d2;background:#f5ecfb;color:#654081}
+.lane-workflow{border:1px solid #d9e5ef;background:#f3f8fe;color:#325778}
+.lane-app{border:1.7px solid #76a1c7;background:#fff;max-width:200px;min-height:69px;justify-content:center;align-items:center;text-align:center}
+.lane-app.planned{border-style:dashed;border-color:#bc9a53;background:#fffaf0}
+.lane-source:hover,.lane-source.selected{background:#eaddf5;border-color:#855ab1}
+.lane-workflow:hover,.lane-workflow.selected{background:#e4f1fc;border-color:#568cc0}
+.lane-app:hover,.lane-app.selected{background:#e9f5ff;border-color:#237bbb}
+.lane-cell button strong{font-size:12px;line-height:1.35}
+.lane-app strong{font-size:16px!important}
+.lane-cell button small{font-size:10px;line-height:1.4;opacity:.75}
+.lane-empty{font-size:11px;font-style:italic;color:#9caabd}
+.lane-sources.has-links:after{content:"";position:absolute;left:calc(100% - 21px);right:-21px;top:50%;border-top:2px dashed #a67bcb;z-index:0;pointer-events:none}
+.lane-workflows.has-links:before{content:"";position:absolute;right:calc(100% - 21px);left:-21px;top:50%;border-top:2px solid #6b9bb9;z-index:0;pointer-events:none}
+.lane-link{width:100%;display:flex;align-items:center;justify-content:space-between;text-align:left;gap:12px;background:#fff;border:1px solid #dfe8f1;color:#395779;border-radius:8px;padding:12px 15px}
+.lane-link:hover{background:#f1f8fd;border-color:#77a5c9}
+.lane-link strong{display:block;font-size:13px}
+.lane-link small{display:block;margin-top:4px;color:#8292a7;font-size:11px}
+@media(max-width:800px){.lane-head span{padding:13px 10px}.lane-cell{padding:12px}.lane-sources.has-links:after{left:calc(100% - 12px);right:-12px}.lane-workflows.has-links:before{right:calc(100% - 12px);left:-12px}}

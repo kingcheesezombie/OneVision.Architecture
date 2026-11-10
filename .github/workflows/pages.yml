@@ -16,6 +16,27 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Validate JavaScript and architecture references
+        run: |
+          node --check app.js
+          node - <<'NODE'
+          const fs = require('fs');
+          const m = JSON.parse(fs.readFileSync('data/architecture.json','utf8'));
+          const caps = new Map(m.capabilities.map(c=>[c.id,c]));
+          const eps = new Map(m.endpoints.map(e=>[e.id,e]));
+          for (const w of m.workflows) {
+            if (!w.steps.length) throw Error('Empty workflow ' + w.id);
+            for (const s of w.steps) {
+              const c = caps.get(s.capability);
+              if (!c) throw Error('Missing capability ' + s.capability);
+              if (s.description) throw Error('Duplicate capability description ' + s.id);
+              if (!w.participants.includes(c.provider)) throw Error('Missing owner in participants ' + w.id);
+              for (const id of s.connection?.endpointIds || []) if (!eps.has(id)) throw Error('Missing endpoint ' + id);
+            }
+          }
+          if ('integrations' in m) throw Error('Old integration catalogue not removed');
+          console.log('Architecture references validated');
+          NODE
       - name: Configure Pages
         uses: actions/configure-pages@v5
       - name: Upload site

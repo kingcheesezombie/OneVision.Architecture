@@ -1,5 +1,5 @@
 {
-  "version": "0.2.0",
+  "version": "0.3.0",
   "updated": "2026-11-10",
   "applications": [
     {
@@ -7,35 +7,126 @@
       "name": "Identity Data Manager",
       "tagline": "People",
       "description": "Resolves people and associates source entities, assets and episodes with person records.",
-      "group": "core"
+      "group": "core",
+      "nature": "Identity resolution and allocation consumer",
+      "connectionRole": "Consumes governed entity data and submits allocations; owns person matching and local asset cache.",
+      "sourceConfiguration": [
+        {
+          "type": "Person and episode sources",
+          "purpose": "Map source identities and episode attributes into IDM person resolution",
+          "detail": "Mapping rules, identifiers and profile configuration"
+        },
+        {
+          "type": "EAM asset catalogue",
+          "purpose": "Populate IDM's local asset cache for candidate matching",
+          "detail": "EAM entity type, source, eligibility and paging contract"
+        }
+      ],
+      "exposedConnections": [
+        "Identity and matching outcomes",
+        "Person/competency allocation context"
+      ],
+      "consumedConnections": [
+        "EAM asset catalogue",
+        "EAM bulk allocation service"
+      ]
     },
     {
       "id": "EAM",
       "name": "Entity Allocation Manager",
       "tagline": "Things",
       "description": "Governs source entities and attributes, and manages their allocations to consuming systems.",
-      "group": "core"
+      "group": "core",
+      "nature": "Canonical entity and allocation service",
+      "connectionRole": "Provides source-governed assets and attributes and target allocation services to other applications.",
+      "sourceConfiguration": [
+        {
+          "type": "Governed entity ingestion",
+          "purpose": "Register source entities and preserve source/type identity",
+          "detail": "Configured source, entity type, class and source identifier"
+        },
+        {
+          "type": "External source patterns",
+          "purpose": "Acquire entities from configured source systems",
+          "detail": "Source-specific mapping and profiling; examples include directory and web-table sources"
+        }
+      ],
+      "exposedConnections": [
+        "Paged entity catalogue queries",
+        "Allocatable entity discovery",
+        "Allocation rule discovery",
+        "Resolve-and-allocate",
+        "Bulk allocation"
+      ],
+      "consumedConnections": [
+        "Source entity feeds"
+      ]
     },
     {
       "id": "HDM",
       "name": "Hierarchy Data Manager",
       "tagline": "Structure",
       "description": "Maintains hierarchies and node structures, including mappings to ODM organisational nodes.",
-      "group": "core"
+      "group": "core",
+      "nature": "Hierarchy and organisational structure manager",
+      "connectionRole": "Defines hierarchy nodes and relates them to governed organisational identities.",
+      "sourceConfiguration": [
+        {
+          "type": "Hierarchy sources",
+          "purpose": "Build or refresh governed hierarchy structures",
+          "detail": "Structure definitions, node identifiers and mapping rules"
+        }
+      ],
+      "exposedConnections": [
+        "Hierarchy structures and node context"
+      ],
+      "consumedConnections": [
+        "EAM allocation information",
+        "ODM organisational node identity"
+      ]
     },
     {
       "id": "KPI",
       "name": "KPI",
       "tagline": "Measurement",
       "description": "Provides performance measurement, analytic views and geographic intelligence.",
-      "group": "core"
+      "group": "core",
+      "nature": "Measurement and analytical presentation platform",
+      "connectionRole": "Publishes performance measures and geographical intelligence for consumption by viewers and the suite hub.",
+      "sourceConfiguration": [
+        {
+          "type": "KPI and geography sources",
+          "purpose": "Map values, measures, periods and geography",
+          "detail": "Source datasets and measurement definitions"
+        }
+      ],
+      "exposedConnections": [
+        "KPI measures and values",
+        "Geographic layers and value views"
+      ],
+      "consumedConnections": [
+        "Configured measurement datasets"
+      ]
     },
     {
       "id": "ODM",
       "name": "Organisational Data Manager",
       "tagline": "Organisational context",
       "description": "Provides organisational nodes and contextual structures used by the wider suite.",
-      "group": "supporting"
+      "group": "supporting",
+      "nature": "Organisational data and node identity authority",
+      "connectionRole": "Provides organisational node context used in other applications.",
+      "sourceConfiguration": [
+        {
+          "type": "Organisational source mappings",
+          "purpose": "Resolve source organisational structure into ODM node identity",
+          "detail": "Specific supported adapters and endpoints not yet verified"
+        }
+      ],
+      "exposedConnections": [
+        "Organisational node identity"
+      ],
+      "consumedConnections": []
     },
     {
       "id": "ONEVISION",
@@ -43,14 +134,33 @@
       "tagline": "Suite hub",
       "description": "Planned user-facing hub presenting outputs from the OneVision suite.",
       "group": "hub",
-      "status": "planned"
+      "status": "planned",
+      "nature": "Planned suite experience hub",
+      "connectionRole": "Will present outputs from the other suite applications rather than own their underlying data.",
+      "sourceConfiguration": [],
+      "exposedConnections": [
+        "Unified navigation and outputs (planned)"
+      ],
+      "consumedConnections": [
+        "People",
+        "Entities",
+        "Hierarchies",
+        "KPIs"
+      ]
     },
     {
       "id": "UI",
       "name": "OneVision.UI",
       "tagline": "Design standard",
       "description": "Reusable governed UI design system applied across application interfaces, not a data integration provider.",
-      "group": "standard"
+      "group": "standard",
+      "nature": "Cross-cutting interface governance standard",
+      "connectionRole": "Provides shared patterns and controls as a design/development dependency, not a runtime data connection.",
+      "sourceConfiguration": [],
+      "exposedConnections": [
+        "Reusable UI patterns and contracts"
+      ],
+      "consumedConnections": []
     }
   ],
   "capabilities": [
@@ -205,7 +315,12 @@
       ],
       "mechanism": "API",
       "status": "established",
-      "notes": "IDM owns cache synchronisation, candidate matching and bulk submission. EAM owns asset identity and allocation processing."
+      "notes": "IDM owns cache synchronisation, candidate matching and bulk submission. EAM owns asset identity and allocation processing.",
+      "endpointIds": [
+        "EAM-ENTITY-QUERY",
+        "EAM-ALLOCATABLE",
+        "EAM-BULK"
+      ]
     },
     {
       "id": "HDM-EAM-ODM",
@@ -218,7 +333,8 @@
       ],
       "mechanism": "API",
       "status": "established",
-      "notes": "Direct and inherited allocations are distinguished."
+      "notes": "Direct and inherited allocations are distinguished.",
+      "endpointIds": []
     },
     {
       "id": "HDM-ODM-REF",
@@ -231,7 +347,8 @@
       ],
       "mechanism": "Conceptual relationship",
       "status": "established",
-      "notes": "Functional relationship; no claim about underlying data transport."
+      "notes": "Functional relationship; no claim about underlying data transport.",
+      "endpointIds": []
     },
     {
       "id": "HUB-IDM",
@@ -243,7 +360,8 @@
         "IDM-IDENTITY"
       ],
       "mechanism": "To be defined",
-      "status": "planned"
+      "status": "planned",
+      "endpointIds": []
     },
     {
       "id": "HUB-EAM",
@@ -256,7 +374,8 @@
         "EAM-ALLOC"
       ],
       "mechanism": "To be defined",
-      "status": "planned"
+      "status": "planned",
+      "endpointIds": []
     },
     {
       "id": "HUB-HDM",
@@ -268,7 +387,8 @@
         "HDM-HIER"
       ],
       "mechanism": "To be defined",
-      "status": "planned"
+      "status": "planned",
+      "endpointIds": []
     },
     {
       "id": "HUB-KPI",
@@ -280,7 +400,8 @@
         "KPI-MEASURE"
       ],
       "mechanism": "To be defined",
-      "status": "planned"
+      "status": "planned",
+      "endpointIds": []
     }
   ],
   "workflows": [
@@ -300,7 +421,15 @@
           "description": "EAM exposes the governed asset catalogue for consumption.",
           "next": [
             "cache"
-          ]
+          ],
+          "connection": {
+            "kind": "api",
+            "endpointIds": [
+              "EAM-ENTITY-QUERY",
+              "EAM-ALLOCATABLE"
+            ],
+            "note": "Catalogue retrieval uses entity query; allocatable discovery can scope eligible items. Which endpoint IDM cache currently invokes must be verified against its implementation."
+          }
         },
         {
           "id": "cache",
@@ -308,7 +437,12 @@
           "description": "IDM maintains a local cache of eligible EAM assets.",
           "next": [
             "match"
-          ]
+          ],
+          "connection": {
+            "kind": "internal",
+            "endpointIds": [],
+            "note": "IDM local cache ingestion is an application capability; no externally exposed IDM endpoint asserted."
+          }
         },
         {
           "id": "match",
@@ -316,7 +450,12 @@
           "description": "IDM evaluates assets against people, accounting for matching confidence and ambiguity.",
           "next": [
             "submit"
-          ]
+          ],
+          "connection": {
+            "kind": "internal",
+            "endpointIds": [],
+            "note": "IDM matching rules run within IDM; no HTTP API endpoint asserted."
+          }
         },
         {
           "id": "submit",
@@ -324,18 +463,90 @@
           "description": "IDM prepares eligible matches and invokes EAM bulk allocation.",
           "next": [
             "allocate"
-          ]
+          ],
+          "connection": {
+            "kind": "api",
+            "endpointIds": [
+              "EAM-BULK"
+            ],
+            "note": "IDM invokes EAM bulk allocation. Invocation is recorded here; EAM owns the endpoint."
+          }
         },
         {
           "id": "allocate",
           "capability": "EAM-BULK",
           "description": "EAM processes the allocation batch and records governed associations.",
-          "next": []
+          "next": [],
+          "connection": {
+            "kind": "api-handler",
+            "endpointIds": [
+              "EAM-BULK"
+            ],
+            "note": "EAM receives the same bulk request—this is not a second HTTP call."
+          }
         }
       ],
       "relatedIntegrations": [
         "IDM-EAM-ALLOC"
       ]
+    }
+  ],
+  "endpoints": [
+    {
+      "id": "EAM-ENTITY-QUERY",
+      "owner": "EAM",
+      "method": "GET",
+      "path": "/api/v1/entities/query",
+      "purpose": "Retrieve paged entities, filtered by type, source, search and inclusion of inactive items.",
+      "status": "documented",
+      "parameters": [
+        "type",
+        "source",
+        "search",
+        "includeInactive",
+        "page",
+        "pageSize"
+      ]
+    },
+    {
+      "id": "EAM-ALLOCATABLE",
+      "owner": "EAM",
+      "method": "GET",
+      "path": "/api/v1/entities/allocatable",
+      "purpose": "Discover paged entities eligible for allocation to a target provider.",
+      "status": "documented",
+      "parameters": [
+        "targetProvider",
+        "page",
+        "pageSize"
+      ]
+    },
+    {
+      "id": "EAM-ALLOCATION-RULES",
+      "owner": "EAM",
+      "method": "GET",
+      "path": "/api/v1/allocation-rules",
+      "purpose": "Retrieve configured allocation rules for a target provider.",
+      "status": "documented",
+      "parameters": [
+        "targetProvider"
+      ]
+    },
+    {
+      "id": "EAM-BULK",
+      "owner": "EAM",
+      "method": "POST",
+      "path": "/api/v1/allocations/bulk",
+      "purpose": "Submit batches of allocations with entity identity and target information.",
+      "status": "documented"
+    },
+    {
+      "id": "EAM-RESOLVE",
+      "owner": "EAM",
+      "method": "POST",
+      "path": "/api/v1/allocations/resolve-and-allocate",
+      "purpose": "Resolve a registered entity and allocate it to a target; not the bulk path.",
+      "status": "documented"
     }
   ]
 }

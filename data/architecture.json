@@ -1,5 +1,5 @@
 {
-  "version": "0.3.0",
+  "version": "0.4.0",
   "updated": "2026-11-10",
   "applications": [
     {
@@ -21,14 +21,6 @@
           "purpose": "Populate IDM's local asset cache for candidate matching",
           "detail": "EAM entity type, source, eligibility and paging contract"
         }
-      ],
-      "exposedConnections": [
-        "Identity and matching outcomes",
-        "Person/competency allocation context"
-      ],
-      "consumedConnections": [
-        "EAM asset catalogue",
-        "EAM bulk allocation service"
       ]
     },
     {
@@ -50,16 +42,6 @@
           "purpose": "Acquire entities from configured source systems",
           "detail": "Source-specific mapping and profiling; examples include directory and web-table sources"
         }
-      ],
-      "exposedConnections": [
-        "Paged entity catalogue queries",
-        "Allocatable entity discovery",
-        "Allocation rule discovery",
-        "Resolve-and-allocate",
-        "Bulk allocation"
-      ],
-      "consumedConnections": [
-        "Source entity feeds"
       ]
     },
     {
@@ -76,13 +58,6 @@
           "purpose": "Build or refresh governed hierarchy structures",
           "detail": "Structure definitions, node identifiers and mapping rules"
         }
-      ],
-      "exposedConnections": [
-        "Hierarchy structures and node context"
-      ],
-      "consumedConnections": [
-        "EAM allocation information",
-        "ODM organisational node identity"
       ]
     },
     {
@@ -99,13 +74,6 @@
           "purpose": "Map values, measures, periods and geography",
           "detail": "Source datasets and measurement definitions"
         }
-      ],
-      "exposedConnections": [
-        "KPI measures and values",
-        "Geographic layers and value views"
-      ],
-      "consumedConnections": [
-        "Configured measurement datasets"
       ]
     },
     {
@@ -122,11 +90,7 @@
           "purpose": "Resolve source organisational structure into ODM node identity",
           "detail": "Specific supported adapters and endpoints not yet verified"
         }
-      ],
-      "exposedConnections": [
-        "Organisational node identity"
-      ],
-      "consumedConnections": []
+      ]
     },
     {
       "id": "ONEVISION",
@@ -137,16 +101,7 @@
       "status": "planned",
       "nature": "Planned suite experience hub",
       "connectionRole": "Will present outputs from the other suite applications rather than own their underlying data.",
-      "sourceConfiguration": [],
-      "exposedConnections": [
-        "Unified navigation and outputs (planned)"
-      ],
-      "consumedConnections": [
-        "People",
-        "Entities",
-        "Hierarchies",
-        "KPIs"
-      ]
+      "sourceConfiguration": []
     },
     {
       "id": "UI",
@@ -156,11 +111,7 @@
       "group": "standard",
       "nature": "Cross-cutting interface governance standard",
       "connectionRole": "Provides shared patterns and controls as a design/development dependency, not a runtime data connection.",
-      "sourceConfiguration": [],
-      "exposedConnections": [
-        "Reusable UI patterns and contracts"
-      ],
-      "consumedConnections": []
+      "sourceConfiguration": []
     }
   ],
   "capabilities": [
@@ -302,108 +253,6 @@
       ]
     }
   ],
-  "integrations": [
-    {
-      "id": "IDM-EAM-ALLOC",
-      "consumer": "IDM",
-      "provider": "EAM",
-      "name": "Asset catalogue and allocation services",
-      "description": "IDM consumes EAM's governed asset retrieval and bulk allocation services as part of its own cache, matching and submission workflow.",
-      "capabilities": [
-        "EAM-ASSET-RETRIEVE",
-        "EAM-BULK"
-      ],
-      "mechanism": "API",
-      "status": "established",
-      "notes": "IDM owns cache synchronisation, candidate matching and bulk submission. EAM owns asset identity and allocation processing.",
-      "endpointIds": [
-        "EAM-ENTITY-QUERY",
-        "EAM-ALLOCATABLE",
-        "EAM-BULK"
-      ]
-    },
-    {
-      "id": "HDM-EAM-ODM",
-      "consumer": "HDM",
-      "provider": "EAM",
-      "name": "ODM node allocations",
-      "description": "HDM uses EAM allocations to determine the ODM node associated with a hierarchy node, including inheritance from ancestors.",
-      "capabilities": [
-        "EAM-ALLOC"
-      ],
-      "mechanism": "API",
-      "status": "established",
-      "notes": "Direct and inherited allocations are distinguished.",
-      "endpointIds": []
-    },
-    {
-      "id": "HDM-ODM-REF",
-      "consumer": "HDM",
-      "provider": "ODM",
-      "name": "Organisational node reference",
-      "description": "HDM relates hierarchy nodes to organisational context represented by ODM nodes.",
-      "capabilities": [
-        "ODM-NODE-REF"
-      ],
-      "mechanism": "Conceptual relationship",
-      "status": "established",
-      "notes": "Functional relationship; no claim about underlying data transport.",
-      "endpointIds": []
-    },
-    {
-      "id": "HUB-IDM",
-      "consumer": "ONEVISION",
-      "provider": "IDM",
-      "name": "People insight",
-      "description": "Planned hub presentation of people and identity-related outputs.",
-      "capabilities": [
-        "IDM-IDENTITY"
-      ],
-      "mechanism": "To be defined",
-      "status": "planned",
-      "endpointIds": []
-    },
-    {
-      "id": "HUB-EAM",
-      "consumer": "ONEVISION",
-      "provider": "EAM",
-      "name": "Governed entity insight",
-      "description": "Planned hub presentation of entities and their associations.",
-      "capabilities": [
-        "EAM-ENTITY",
-        "EAM-ALLOC"
-      ],
-      "mechanism": "To be defined",
-      "status": "planned",
-      "endpointIds": []
-    },
-    {
-      "id": "HUB-HDM",
-      "consumer": "ONEVISION",
-      "provider": "HDM",
-      "name": "Hierarchy insight",
-      "description": "Planned hub presentation of structural information.",
-      "capabilities": [
-        "HDM-HIER"
-      ],
-      "mechanism": "To be defined",
-      "status": "planned",
-      "endpointIds": []
-    },
-    {
-      "id": "HUB-KPI",
-      "consumer": "ONEVISION",
-      "provider": "KPI",
-      "name": "Performance insight",
-      "description": "Planned hub presentation of KPI and geographic outputs.",
-      "capabilities": [
-        "KPI-MEASURE"
-      ],
-      "mechanism": "To be defined",
-      "status": "planned",
-      "endpointIds": []
-    }
-  ],
   "workflows": [
     {
       "id": "WF-IDM-EAM-ASSET",
@@ -418,7 +267,6 @@
         {
           "id": "retrieve",
           "capability": "EAM-ASSET-RETRIEVE",
-          "description": "EAM exposes the governed asset catalogue for consumption.",
           "next": [
             "cache"
           ],
@@ -434,7 +282,6 @@
         {
           "id": "cache",
           "capability": "IDM-ASSET-CACHE",
-          "description": "IDM maintains a local cache of eligible EAM assets.",
           "next": [
             "match"
           ],
@@ -447,7 +294,6 @@
         {
           "id": "match",
           "capability": "IDM-ALLOCATION-MATCH",
-          "description": "IDM evaluates assets against people, accounting for matching confidence and ambiguity.",
           "next": [
             "submit"
           ],
@@ -460,7 +306,6 @@
         {
           "id": "submit",
           "capability": "IDM-ALLOCATION-SUBMIT",
-          "description": "IDM prepares eligible matches and invokes EAM bulk allocation.",
           "next": [
             "allocate"
           ],
@@ -475,7 +320,6 @@
         {
           "id": "allocate",
           "capability": "EAM-BULK",
-          "description": "EAM processes the allocation batch and records governed associations.",
           "next": [],
           "connection": {
             "kind": "api-handler",
@@ -485,9 +329,210 @@
             "note": "EAM receives the same bulk request—this is not a second HTTP call."
           }
         }
+      ]
+    },
+    {
+      "id": "WF-HDM-EAM-ODM",
+      "name": "HDM organisational allocation lookup",
+      "summary": "HDM uses EAM's allocation lifecycle capability to identify organisational-node assignments; hierarchy inheritance is resolved by HDM.",
+      "status": "established",
+      "steps": [
+        {
+          "id": "hdm-hierarchy",
+          "capability": "HDM-HIER",
+          "connection": {
+            "kind": "internal",
+            "endpointIds": [],
+            "note": "HDM manages and interprets hierarchy nodes."
+          },
+          "next": [
+            "eam-allocation"
+          ]
+        },
+        {
+          "id": "eam-allocation",
+          "capability": "EAM-ALLOC",
+          "connection": {
+            "kind": "unspecified",
+            "endpointIds": [],
+            "note": "The precise EAM lookup endpoint for HDM has not yet been verified."
+          },
+          "next": []
+        }
       ],
-      "relatedIntegrations": [
-        "IDM-EAM-ALLOC"
+      "participants": [
+        "HDM",
+        "EAM"
+      ]
+    },
+    {
+      "id": "WF-HDM-ODM-REF",
+      "name": "HDM organisational identity reference",
+      "summary": "HDM relates hierarchy nodes to ODM organisational identity; the transport contract has not been verified.",
+      "status": "established",
+      "steps": [
+        {
+          "id": "odm-reference",
+          "capability": "ODM-NODE-REF",
+          "connection": {
+            "kind": "unspecified",
+            "endpointIds": [],
+            "note": "Conceptual organisational identity reference; endpoint not verified."
+          },
+          "next": [
+            "hdm-structure"
+          ]
+        },
+        {
+          "id": "hdm-structure",
+          "capability": "HDM-HIER",
+          "connection": {
+            "kind": "internal",
+            "endpointIds": [],
+            "note": "HDM uses the organisational reference when representing hierarchy nodes."
+          },
+          "next": []
+        }
+      ],
+      "participants": [
+        "ODM",
+        "HDM"
+      ]
+    },
+    {
+      "id": "WF-HUB-IDM",
+      "name": "OneVision hub — People insight",
+      "summary": "Planned presentation of IDM output in the OneVision hub; implementation contracts are not defined.",
+      "status": "planned",
+      "steps": [
+        {
+          "id": "provide",
+          "capability": "IDM-IDENTITY",
+          "connection": {
+            "kind": "unspecified",
+            "endpointIds": [],
+            "note": "Contract to be defined."
+          },
+          "next": [
+            "present"
+          ]
+        },
+        {
+          "id": "present",
+          "capability": "ONEVISION-HUB",
+          "connection": {
+            "kind": "internal",
+            "endpointIds": [],
+            "note": "Planned hub presentation."
+          },
+          "next": []
+        }
+      ],
+      "participants": [
+        "IDM",
+        "ONEVISION"
+      ]
+    },
+    {
+      "id": "WF-HUB-EAM",
+      "name": "OneVision hub — Governed entity insight",
+      "summary": "Planned presentation of EAM output in the OneVision hub; implementation contracts are not defined.",
+      "status": "planned",
+      "steps": [
+        {
+          "id": "provide",
+          "capability": "EAM-ENTITY",
+          "connection": {
+            "kind": "unspecified",
+            "endpointIds": [],
+            "note": "Contract to be defined."
+          },
+          "next": [
+            "present"
+          ]
+        },
+        {
+          "id": "present",
+          "capability": "ONEVISION-HUB",
+          "connection": {
+            "kind": "internal",
+            "endpointIds": [],
+            "note": "Planned hub presentation."
+          },
+          "next": []
+        }
+      ],
+      "participants": [
+        "EAM",
+        "ONEVISION"
+      ]
+    },
+    {
+      "id": "WF-HUB-HDM",
+      "name": "OneVision hub — Hierarchy insight",
+      "summary": "Planned presentation of HDM output in the OneVision hub; implementation contracts are not defined.",
+      "status": "planned",
+      "steps": [
+        {
+          "id": "provide",
+          "capability": "HDM-HIER",
+          "connection": {
+            "kind": "unspecified",
+            "endpointIds": [],
+            "note": "Contract to be defined."
+          },
+          "next": [
+            "present"
+          ]
+        },
+        {
+          "id": "present",
+          "capability": "ONEVISION-HUB",
+          "connection": {
+            "kind": "internal",
+            "endpointIds": [],
+            "note": "Planned hub presentation."
+          },
+          "next": []
+        }
+      ],
+      "participants": [
+        "HDM",
+        "ONEVISION"
+      ]
+    },
+    {
+      "id": "WF-HUB-KPI",
+      "name": "OneVision hub — Performance insight",
+      "summary": "Planned presentation of KPI output in the OneVision hub; implementation contracts are not defined.",
+      "status": "planned",
+      "steps": [
+        {
+          "id": "provide",
+          "capability": "KPI-MEASURE",
+          "connection": {
+            "kind": "unspecified",
+            "endpointIds": [],
+            "note": "Contract to be defined."
+          },
+          "next": [
+            "present"
+          ]
+        },
+        {
+          "id": "present",
+          "capability": "ONEVISION-HUB",
+          "connection": {
+            "kind": "internal",
+            "endpointIds": [],
+            "note": "Planned hub presentation."
+          },
+          "next": []
+        }
+      ],
+      "participants": [
+        "KPI",
+        "ONEVISION"
       ]
     }
   ],

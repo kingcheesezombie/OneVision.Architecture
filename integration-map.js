@@ -22,7 +22,7 @@ class IntegrationMap{
  constructor(root,m,navigate,filters={}){
   this.root=root;this.model=m;this.navigate=navigate;this.filters=filters;
   this.selection=null;this.zoom=1;this.allPairs=pairs(m);
-  root.addEventListener('click',e=>this.click(e));
+  root.addEventListener('click',e=>{if(e.target.closest('[data-map-action],[data-kind],[data-map-node],[data-map-pair],[data-map-workflow]')){e.stopPropagation();this.click(e)}});
   root.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.closest('[data-map-node],[data-map-pair]')){e.preventDefault();this.click({target:e.target})}});
   this.render();
  }

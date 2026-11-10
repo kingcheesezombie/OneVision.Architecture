@@ -1,0 +1,30 @@
+{
+"version":"0.1.0","updated":"2026-11-10",
+"applications":[
+{"id":"IDM","name":"Identity Data Manager","tagline":"People","description":"Resolves people and associates source entities, assets and episodes with person records.","group":"core"},
+{"id":"EAM","name":"Entity Allocation Manager","tagline":"Things","description":"Governs source entities and attributes, and manages their allocations to consuming systems.","group":"core"},
+{"id":"HDM","name":"Hierarchy Data Manager","tagline":"Structure","description":"Maintains hierarchies and node structures, including mappings to ODM organisational nodes.","group":"core"},
+{"id":"KPI","name":"KPI","tagline":"Measurement","description":"Provides performance measurement, analytic views and geographic intelligence.","group":"core"},
+{"id":"ODM","name":"Organisational Data Manager","tagline":"Organisational context","description":"Provides organisational nodes and contextual structures used by the wider suite.","group":"supporting"},
+{"id":"ONEVISION","name":"OneVision","tagline":"Suite hub","description":"Planned user-facing hub presenting outputs from the OneVision suite.","group":"hub","status":"planned"},
+{"id":"UI","name":"OneVision.UI","tagline":"Design standard","description":"Reusable governed UI design system applied across application interfaces, not a data integration provider.","group":"standard"}],
+"capabilities":[
+{"id":"EAM-ENTITY","provider":"EAM","name":"Governed entity catalogue","summary":"Register and retrieve canonical source entities and attributes, preserving source identity and lineage.","tags":["Entities","Lineage"]},
+{"id":"EAM-ALLOC","provider":"EAM","name":"Entity allocation lifecycle","summary":"Associate known entities with consumer targets, including effective dates, allocation state and multiple-target support according to class rules.","tags":["Allocation","Temporal"]},
+{"id":"EAM-BULK","provider":"EAM","name":"Bulk allocations","summary":"Submit multiple allocations efficiently in a single bulk operation.","tags":["Allocation","Bulk"]},
+{"id":"IDM-IDENTITY","provider":"IDM","name":"Person identity and matching","summary":"Resolve and match source information to canonical people with confidence and ambiguity handling.","tags":["People","Matching"]},
+{"id":"IDM-EPISODE","provider":"IDM","name":"Episode association","summary":"Associate episodes and source assets with resolved person records.","tags":["Episodes","People"]},
+{"id":"HDM-HIER","provider":"HDM","name":"Hierarchy management","summary":"Build and maintain hierarchical structures, including templated and snapshot-based views.","tags":["Hierarchies"]},
+{"id":"HDM-ODM","provider":"HDM","name":"Organisational node resolution","summary":"Resolve hierarchy nodes to directly assigned or inherited ODM organisational context.","tags":["Hierarchies","Organisations"]},
+{"id":"KPI-MEASURE","provider":"KPI","name":"Performance and geographic insight","summary":"Present governed KPI measures, values and geographical views.","tags":["KPI","Geography"]},
+{"id":"ONEVISION-HUB","provider":"ONEVISION","name":"Unified suite presentation","summary":"Planned presentation of governed outputs from constituent suite applications.","tags":["Hub"],"status":"planned"},
+{"id":"UI-STANDARD","provider":"UI","name":"Reusable interface patterns","summary":"Common visual and interaction patterns used by suite applications.","tags":["Design system"]}],
+"integrations":[
+{"id":"IDM-EAM-ALLOC","consumer":"IDM","provider":"EAM","name":"Entity resolution and allocation","description":"IDM uses EAM to resolve known source entities and associate them with its people and competency records, retaining canonical lineage.","capabilities":["EAM-ENTITY","EAM-ALLOC","EAM-BULK"],"mechanism":"API","status":"established","notes":"Unknown entity values are not implicitly created. Bulk allocations support automated matching."},
+{"id":"HDM-EAM-ODM","consumer":"HDM","provider":"EAM","name":"ODM node allocations","description":"HDM uses EAM allocations to determine the ODM node associated with a hierarchy node, including inheritance from ancestors.","capabilities":["EAM-ALLOC"],"mechanism":"API","status":"established","notes":"Direct and inherited allocations are distinguished."},
+{"id":"HDM-ODM-REF","consumer":"HDM","provider":"ODM","name":"Organisational node reference","description":"HDM relates hierarchy nodes to organisational context represented by ODM nodes.","capabilities":["HDM-ODM"],"mechanism":"Conceptual relationship","status":"established","notes":"Functional relationship; no claim about underlying data transport."},
+{"id":"HUB-IDM","consumer":"ONEVISION","provider":"IDM","name":"People insight","description":"Planned hub presentation of people and identity-related outputs.","capabilities":["IDM-IDENTITY"],"mechanism":"To be defined","status":"planned"},
+{"id":"HUB-EAM","consumer":"ONEVISION","provider":"EAM","name":"Governed entity insight","description":"Planned hub presentation of entities and their associations.","capabilities":["EAM-ENTITY","EAM-ALLOC"],"mechanism":"To be defined","status":"planned"},
+{"id":"HUB-HDM","consumer":"ONEVISION","provider":"HDM","name":"Hierarchy insight","description":"Planned hub presentation of structural information.","capabilities":["HDM-HIER"],"mechanism":"To be defined","status":"planned"},
+{"id":"HUB-KPI","consumer":"ONEVISION","provider":"KPI","name":"Performance insight","description":"Planned hub presentation of KPI and geographic outputs.","capabilities":["KPI-MEASURE"],"mechanism":"To be defined","status":"planned"}]
+}

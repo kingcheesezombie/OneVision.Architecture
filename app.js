@@ -98,12 +98,11 @@ function workflowDetail(w){
 }
 function renderLandscape(){
  $('toolbar').hidden=false;
- setHeader('Application landscape','Explore the OneVision ecosystem and workflow-derived relationships.');
- const apps=state.model.applications.filter(criteria);
- let h='<div class="panel"><h2>The OneVision ecosystem</h2><p class="sub">Choose an application for its complete documentation.</p><div class="landscape">'+apps.map(a=>'<button class="node '+(a.group==='hub'?'hub':a.group==='standard'?'standard':a.group==='supporting'?'supporting':'')+'" data-kind="application" data-id="'+esc(a.id)+'"><strong>'+esc(a.id==='ONEVISION'?'OneVision':a.id==='UI'?'OneVision.UI':a.id)+'</strong><span>'+esc(a.tagline)+'</span><small>'+esc(a.description)+'</small></button>').join('')+'</div><p class="hint">OneVision.UI is a cross-cutting design standard, not a data integration.</p></div>';
- h+='<div class="panel"><h2>Capability workflows</h2><p class="sub">The following workflows define relationships across applications.</p><div class="items">'+state.model.workflows.filter(criteria).map(w=>viewCard('workflow',w)).join('')+'</div></div>';
- $('content').innerHTML=h;
+ setHeader('Integration landscape','Explore application relationships derived from the suite’s named capability workflows.');
+ $('content').innerHTML='<section class="panel integration-map-panel"><div id="integration-map"></div></section>';
+ new window.OneVisionIntegrationMap($('integration-map'),state.model,(kind,id)=>nav(kinds[kind],kind,id),{status:state.status,search:state.search});
 }
+
 function render(){
  if(!state.model)return;
  renderSidebar();$('updated').textContent='Updated '+state.model.updated;

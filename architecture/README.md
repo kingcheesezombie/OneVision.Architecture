@@ -33,3 +33,15 @@ python scripts/build_architecture.py
 - Keep hostnames, credentials, personal data, connection strings and other confidential operational information out of this public repository.
 
 The renderer and YAML can be updated separately; a website improvement should not rewrite files in this directory.
+
+## Preview YAML changes in the helicopter map
+
+Open the published **Landscape** page. The right-side **Architecture scripts** panel loads these six YAML files directly from the deployed website.
+
+1. Choose a definition file and edit its text.
+2. The panel validates the combined YAML after each edit, including IDs, capability ownership, workflow steps, endpoint references and external mapping destinations.
+3. Valid edits immediately update the helicopter diagram; invalid edits display the error without changing the last valid map.
+4. Switch files to preview changes across definitions. Drafts remain available during the current browser session while the page is open; the panel does not store or upload them.
+5. Use **Copy YAML** or **Download YAML** to retain changes, or **Edit on GitHub** to commit the equivalent changes to the repository.
+
+**Important:** This is an in-browser, uncommitted **preview**, not a GitHub editor. It does not have repository-write permissions. Committing on GitHub triggers the normal CI validation and website deployment. The browser preview validates the key cross-references but the Python compiler remains the publishing authority. Do not paste secrets or personal data into this public architecture model.

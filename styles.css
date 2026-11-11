@@ -244,3 +244,19 @@ header p{max-width:850px}
 .script-note{font-size:11px;line-height:1.6;color:#788aa0;margin:13px 0 0}
 @media(max-width:1250px){.architecture-workbench{grid-template-columns:minmax(0,1fr) 330px}.architecture-script-panel{padding:13px}}
 @media(max-width:1000px){.architecture-workbench{grid-template-columns:1fr}.architecture-script-panel textarea{height:340px}.architecture-script-panel{margin-top:6px}}
+
+/* v1.1 — map-first layout: collapsible YAML editor beneath the diagram */
+.architecture-workbench{display:flex;flex-direction:column;gap:18px;align-items:stretch;min-width:0}
+.architecture-map-column{width:100%;min-width:0}
+.architecture-script-expander{display:block;width:100%;min-width:0;border:1px solid #dbe4ef;border-radius:12px;background:#fbfcff;overflow:hidden}
+.architecture-script-expander>summary{display:flex;justify-content:space-between;align-items:center;gap:16px;list-style:none;cursor:pointer;padding:16px 20px;color:#28415d}
+.architecture-script-expander>summary::-webkit-details-marker{display:none}
+.architecture-script-expander>summary:hover{background:#f0f6fc}
+.script-expander-title{font-size:14px;font-weight:700;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.script-expander-title small{font-size:11px;font-weight:400;color:#76869a}
+.script-expander-chevron{font-size:20px;line-height:1;color:#6b7f97;transition:transform .15s}
+.architecture-script-expander[open] .script-expander-chevron{transform:rotate(180deg)}
+.architecture-script-expander[open]>summary{border-bottom:1px solid #e0e8f2}
+.architecture-script-expander .architecture-script-panel{border:0;border-radius:0;box-shadow:none;padding:18px 20px}
+.architecture-script-expander .architecture-script-panel textarea{height:400px;font-size:12px}
+@media(max-width:1000px){.architecture-script-expander .architecture-script-panel textarea{height:340px}}

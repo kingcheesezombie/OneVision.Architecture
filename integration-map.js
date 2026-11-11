@@ -68,7 +68,10 @@ class IntegrationMap{
    addedApps++;
   }
   const addedByApp=new Map();
+  this.sourceOwners=this.sourceOwners||new Map();
   for(const src of this.model.externalMappings||[]){
+   if(this.sourceOwners.has(src.id)&&this.sourceOwners.get(src.id)!==src.targetApp)delete sourcePosition[src.id];
+   this.sourceOwners.set(src.id,src.targetApp);
    if(sourcePosition[src.id])continue;
    const target=layouts[src.targetApp];if(!target)continue;
    const index=addedByApp.get(src.targetApp)||0;addedByApp.set(src.targetApp,index+1);

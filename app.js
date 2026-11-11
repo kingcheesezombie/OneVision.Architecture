@@ -99,8 +99,8 @@ function workflowDetail(w){
 const scriptPanel=new window.ArchitectureScriptPanel();
 function renderLandscape(){
  $('toolbar').hidden=false;
- setHeader('Integration landscape','Explore YAML-defined application workflows and external sources. Preview architecture edits beside the helicopter map.');
- $('content').innerHTML='<section class="panel integration-map-panel"><div class="architecture-workbench"><div class="architecture-map-column"><div id="integration-map"></div></div><aside id="architecture-script-panel" class="architecture-script-panel" aria-label="Architecture YAML script editor"></aside></div></section>';
+ setHeader('Integration landscape','Explore YAML-defined application workflows and external sources. Expand Architecture Scripts below the map to preview changes.');
+ $('content').innerHTML='<section class="panel integration-map-panel"><div class="architecture-workbench"><div class="architecture-map-column"><div id="integration-map"></div></div><details class="architecture-script-expander"><summary><span class="script-expander-title">Architecture scripts <small>YAML definitions · Live preview</small></span><span class="script-expander-chevron" aria-hidden="true">⌄</span></summary><div id="architecture-script-panel" class="architecture-script-panel" aria-label="Architecture YAML script editor"></div></details></div></section>';
  const map=new window.OneVisionIntegrationMap($('integration-map'),state.model,(kind,id)=>nav(kinds[kind],kind,id),{status:state.status,search:state.search});
  scriptPanel.mount($('architecture-script-panel'),map);
 }

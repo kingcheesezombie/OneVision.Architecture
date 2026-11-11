@@ -279,3 +279,43 @@ header p{max-width:850px}
 .script-review ul{margin:8px 0 12px;padding-left:20px;font:12px/1.7 ui-monospace,SFMono-Regular,Consolas,monospace;color:#315a78}
 .script-review-actions{display:flex;justify-content:flex-end;gap:9px;flex-wrap:wrap}
 .script-review .script-warning{color:#99471c;font-weight:650}
+
+/* Visual architecture editor: properties overlay and explicit source connection editing */
+.architecture-map-column{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;align-items:start;min-width:0}
+.architecture-map-column.has-properties{grid-template-columns:minmax(0,1fr) minmax(300px,345px)}
+.architecture-map-column>#integration-map{min-width:0}
+.architecture-properties{border:1px solid #dce6f0;background:#f9fbfe;border-radius:12px;padding:17px;min-width:0}
+.properties-header{display:flex;justify-content:space-between;align-items:start;gap:10px;flex-wrap:wrap;margin-bottom:15px}
+.properties-header h3{font-size:16px;margin:0 0 5px;color:#24415f}
+.properties-header p{font-size:11px;margin:0;line-height:1.5;color:#75869a}
+.properties-header code{color:#6a538c}
+.properties-add,.properties-connect,.properties-footer button{border:1px solid #2778a9;background:#2c79ac;color:white;border-radius:7px;padding:9px 11px;font-size:11px;cursor:pointer;font-weight:650}
+.properties-add:hover,.properties-connect:hover,.properties-footer button:hover:not(:disabled){background:#1d608d}
+.properties-hint{font-size:12px;line-height:1.8;color:#647c92;padding:10px 0}
+.properties-selected{display:flex;justify-content:space-between;align-items:center;gap:8px;border-top:1px solid #e1e8f1;padding:13px 0}
+.properties-selected strong{color:#3f5f81;font-size:13px}
+.properties-selected button{border:0;background:transparent;color:#6f8296;font-size:21px;cursor:pointer}
+.property-field{display:grid;gap:5px;margin:0 0 12px;font-size:11px;color:#586e87;font-weight:650;min-width:0}
+.property-field input,.property-field select,.property-field textarea,.property-field-row input{min-width:0;box-sizing:border-box;width:100%;border:1px solid #cedce9;background:white;border-radius:7px;padding:9px 10px;color:#294766;font-size:12px;font-weight:400}
+.property-field textarea{resize:vertical;line-height:1.5}
+.property-connection{border:1px solid #d6e4ee;border-radius:9px;padding:13px;background:#f0f6fc;margin:13px 0}
+.property-connection strong,.property-fields-head strong{font-size:12px;color:#294c6b}
+.property-connection p{font-size:11px;color:#637d95;line-height:1.5;margin:6px 0 12px}
+.property-connection .property-field{margin-bottom:10px}
+.properties-connect{background:#fff;color:#2d729c}
+.properties-connect:hover{background:#e8f4fc;color:#1b5c83}
+.properties-connect-hint{font-weight:650;color:#81519f!important}
+.property-fields{border-top:1px solid #dce6f0;padding-top:15px;margin-top:14px}
+.property-fields-head{display:flex;justify-content:space-between;align-items:center;gap:9px}
+.property-fields-head button{border:1px solid #bcd0df;background:#fff;color:#376e96;border-radius:6px;font-size:11px;padding:7px 9px}
+.property-field-headings{display:grid;grid-template-columns:1fr 1fr 24px;gap:5px;margin-top:12px;color:#71859a;font-size:10px}
+.property-field-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) 24px;gap:5px;margin:7px 0}
+.property-field-row input{padding:7px 6px;font-size:11px}
+.property-field-row button{border:0;background:transparent;color:#9b4c50;font-size:18px;cursor:pointer;padding:0}
+.property-meta{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-top:17px;font-size:10px;color:#7d89a0}
+.property-meta button{background:transparent;border:0;color:#a83e4d;font-size:11px;cursor:pointer;text-decoration:underline}
+.properties-footer{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;border-top:1px solid #dce6f0;padding-top:14px;margin-top:16px;font-size:11px;color:#63768b}
+.properties-footer button:disabled{opacity:.42;cursor:not-allowed}
+.properties-error{color:#9b342c;background:#fff0eb;border:1px solid #f1d0c9;padding:10px;border-radius:7px;font-size:11px;margin:10px 0;line-height:1.5}
+@media(max-width:1400px){.architecture-map-column.has-properties{grid-template-columns:minmax(0,1fr) 300px}}
+@media(max-width:1080px){.architecture-map-column.has-properties{grid-template-columns:1fr}}

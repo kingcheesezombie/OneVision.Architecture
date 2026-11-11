@@ -189,3 +189,32 @@ header p{max-width:850px}
 .lane-link strong{display:block;font-size:13px}
 .lane-link small{display:block;margin-top:4px;color:#8292a7;font-size:11px}
 @media(max-width:800px){.lane-head span{padding:13px 10px}.lane-cell{padding:12px}.lane-sources.has-links:after{left:calc(100% - 12px);right:-12px}.lane-workflows.has-links:before{right:calc(100% - 12px);left:-12px}}
+
+/* Helicopter integration map: explicit relationship ports and app-centred source clusters */
+.arch-stage{margin-top:16px;overflow-x:auto;border:1px solid #dee7f2;background:radial-gradient(ellipse at 56% 35%,#fff 5%,#f4f8fc 100%);border-radius:13px}
+.architecture-svg{display:block;width:100%;min-width:880px;height:auto;max-height:860px}
+.arch-path-hit{stroke:transparent;fill:none;stroke-width:26;pointer-events:stroke;cursor:pointer}
+.arch-path-line{fill:none;stroke:#397da9;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}
+.arch-connection.is-planned .arch-path-line{stroke:#c39b54;stroke-dasharray:8 7;stroke-width:2.7}
+.arch-source-path{fill:none;stroke:#a47ebc;stroke-width:2.5;stroke-dasharray:5 5;stroke-linecap:round}
+.arch-port{fill:#fff;stroke-width:3;pointer-events:none}
+.arch-port.blue{stroke:#397da9}
+.arch-port.purple{stroke:#a47ebc}
+.arch-port.gold{stroke:#c39b54}
+.arch-connection:hover .arch-path-line,.arch-connection:focus .arch-path-line{stroke-width:5.5}
+.arch-connection,.arch-external-edge{cursor:pointer;transition:opacity .16s}
+.arch-application-nodes,.arch-external-nodes{pointer-events:none}
+.arch-app,.arch-external-node{pointer-events:auto;cursor:pointer;transition:opacity .16s}
+.arch-app rect{fill:#fff;stroke:#83a3c3;stroke-width:2;filter:drop-shadow(0 3px 5px #254c761b)}
+.arch-app:hover rect,.arch-app.selected rect,.arch-app:focus rect{stroke:#267cb5;stroke-width:3;fill:#e9f4ff}
+.arch-app.planned rect{fill:#fff8ed;stroke:#c8a568;stroke-dasharray:7 5}
+.arch-app.standard rect{fill:#f7f8fa;stroke:#a4afc0;stroke-dasharray:5 4}
+.arch-app-name{font-size:20px;font-weight:750;fill:#1c3757;pointer-events:none}
+.arch-app-sub{font-size:12px;fill:#6b8098;pointer-events:none}
+.arch-external-node rect{fill:#f6edfb;stroke:#a78bbd;stroke-width:1.8;filter:drop-shadow(0 2px 3px #765b911c)}
+.arch-external-node:hover rect,.arch-external-node.selected rect{stroke:#8153ab;stroke-width:3;fill:#f0e0fb}
+.arch-external-name{font-size:13px;font-weight:700;fill:#563775;pointer-events:none}
+.arch-external-sub{font-size:10px;fill:#8a6a9d;pointer-events:none}
+.arch-connection.dimmed,.arch-app.dimmed,.arch-external-edge.dimmed,.arch-external-node.dimmed{opacity:.13}
+.arch-connection:focus-visible,.arch-app:focus-visible,.arch-external-node:focus-visible{outline:none;filter:drop-shadow(0 0 8px #4f91bc)}
+@media(max-width:700px){.arch-stage{margin-top:12px}.architecture-svg{min-width:900px}}

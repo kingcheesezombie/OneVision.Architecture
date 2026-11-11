@@ -42,6 +42,15 @@ Open the published **Landscape** page. The right-side **Architecture scripts** p
 2. The panel validates the combined YAML after each edit, including IDs, capability ownership, workflow steps, endpoint references and external mapping destinations.
 3. Valid edits immediately update the helicopter diagram; invalid edits display the error without changing the last valid map.
 4. Switch files to preview changes across definitions. Drafts remain available during the current browser session while the page is open; the panel does not store or upload them.
-5. Use **Copy YAML** or **Download YAML** to retain changes, or **Edit on GitHub** to commit the equivalent changes to the repository.
+5. Select **Review & save to GitHub** to review the changed YAML files, then connect a GitHub fine-grained personal access token and confirm the commit.
+6. GitHub Actions validates and publishes the updated site. You can also copy/download a draft, or use **Edit on GitHub**.
 
-**Important:** This is an in-browser, uncommitted **preview**, not a GitHub editor. It does not have repository-write permissions. Committing on GitHub triggers the normal CI validation and website deployment. The browser preview validates the key cross-references but the Python compiler remains the publishing authority. Do not paste secrets or personal data into this public architecture model.
+### Authorised GitHub saving
+
+The Explorer is hosted on **public static GitHub Pages**, so it has no private server to handle OAuth. For direct saving, you must explicitly provide a fine-grained personal access token in the editor with access to **only** `kingcheesezombie/OneVision.Architecture` and repository permission **Contents: Read and write** (choose a short expiry). The token is held in JavaScript memory only while the tab is open; it is not saved to files, cookies, localStorage, URLs, or YAML. Disconnect or close the tab to stop using it, and revoke the token in GitHub Settings when it is no longer needed. Never send the token through ChatGPT.
+
+The editor validates all six YAML files and displays a review of the changed filenames. After confirmation, it checks the latest remote contents against the originally loaded definitions, creates **one atomic commit** with only the changed YAML files, and updates `main` without force-pushing. If another editor changed one of those files, saving stops and your drafts remain available for reconciliation. Repository permissions and branch protection still apply.
+
+**Security:** This is suitable for a personal, explicitly authorised editing session, not unattended automated authentication. Prefer a GitHub App/OAuth server-side integration if this becomes a multi-user tool. The YAML parser is bundled locally at build time; the website no longer loads a third-party parser directly at runtime.
+
+The browser's cross-reference validation is a preview check, not the publishing authority: the Python validator in GitHub Actions remains authoritative. A commit could still fail CI validation; watch the workflow run. Do not commit confidential or personally identifiable information to the public architecture repository.

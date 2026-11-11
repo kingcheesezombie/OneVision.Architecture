@@ -1,0 +1,236 @@
+# OneVision architecture source of truth. Edit this file; GitHub Actions generates data/architecture.json.
+workflows:
+  -
+    id: "WF-IDM-EAM-ASSET"
+    name: "IDM / EAM asset allocation"
+    summary: "The cross-application capability sequence through which EAM assets become IDM match candidates and matched assets are allocated back through EAM."
+    status: "established"
+    participants:
+      - "EAM"
+      - "IDM"
+    steps:
+      -
+        id: "retrieve"
+        capability: "EAM-ASSET-RETRIEVE"
+        next:
+          - "cache"
+        connection:
+          kind: "api"
+          endpointIds:
+            - "EAM-ENTITY-QUERY"
+            - "EAM-ALLOCATABLE"
+          note: "Catalogue retrieval uses entity query; allocatable discovery can scope eligible items. Which endpoint IDM cache currently invokes must be verified against its implementation."
+      -
+        id: "cache"
+        capability: "IDM-ASSET-CACHE"
+        next:
+          - "match"
+        connection:
+          kind: "internal"
+          endpointIds:
+            []
+          note: "IDM local cache ingestion is an application capability; no externally exposed IDM endpoint asserted."
+      -
+        id: "match"
+        capability: "IDM-ALLOCATION-MATCH"
+        next:
+          - "submit"
+        connection:
+          kind: "internal"
+          endpointIds:
+            []
+          note: "IDM matching rules run within IDM; no HTTP API endpoint asserted."
+      -
+        id: "submit"
+        capability: "IDM-ALLOCATION-SUBMIT"
+        next:
+          - "allocate"
+        connection:
+          kind: "api"
+          endpointIds:
+            - "EAM-BULK"
+          note: "IDM invokes EAM bulk allocation. Invocation is recorded here; EAM owns the endpoint."
+      -
+        id: "allocate"
+        capability: "EAM-BULK"
+        next:
+          []
+        connection:
+          kind: "api-handler"
+          endpointIds:
+            - "EAM-BULK"
+          note: "EAM receives the same bulk request—this is not a second HTTP call."
+  -
+    id: "WF-HDM-EAM-ODM"
+    name: "HDM organisational allocation lookup"
+    summary: "HDM uses EAM's allocation lifecycle capability to identify organisational-node assignments; hierarchy inheritance is resolved by HDM."
+    status: "established"
+    steps:
+      -
+        id: "hdm-hierarchy"
+        capability: "HDM-HIER"
+        connection:
+          kind: "internal"
+          endpointIds:
+            []
+          note: "HDM manages and interprets hierarchy nodes."
+        next:
+          - "eam-allocation"
+      -
+        id: "eam-allocation"
+        capability: "EAM-ALLOC"
+        connection:
+          kind: "unspecified"
+          endpointIds:
+            []
+          note: "The precise EAM lookup endpoint for HDM has not yet been verified."
+        next:
+          []
+    participants:
+      - "HDM"
+      - "EAM"
+  -
+    id: "WF-HDM-ODM-REF"
+    name: "HDM organisational identity reference"
+    summary: "HDM relates hierarchy nodes to ODM organisational identity; the transport contract has not been verified."
+    status: "established"
+    steps:
+      -
+        id: "odm-reference"
+        capability: "ODM-NODE-REF"
+        connection:
+          kind: "unspecified"
+          endpointIds:
+            []
+          note: "Conceptual organisational identity reference; endpoint not verified."
+        next:
+          - "hdm-structure"
+      -
+        id: "hdm-structure"
+        capability: "HDM-HIER"
+        connection:
+          kind: "internal"
+          endpointIds:
+            []
+          note: "HDM uses the organisational reference when representing hierarchy nodes."
+        next:
+          []
+    participants:
+      - "ODM"
+      - "HDM"
+  -
+    id: "WF-HUB-IDM"
+    name: "OneVision hub — People insight"
+    summary: "Planned presentation of IDM output in the OneVision hub; implementation contracts are not defined."
+    status: "planned"
+    steps:
+      -
+        id: "provide"
+        capability: "IDM-IDENTITY"
+        connection:
+          kind: "unspecified"
+          endpointIds:
+            []
+          note: "Contract to be defined."
+        next:
+          - "present"
+      -
+        id: "present"
+        capability: "ONEVISION-HUB"
+        connection:
+          kind: "internal"
+          endpointIds:
+            []
+          note: "Planned hub presentation."
+        next:
+          []
+    participants:
+      - "IDM"
+      - "ONEVISION"
+  -
+    id: "WF-HUB-EAM"
+    name: "OneVision hub — Governed entity insight"
+    summary: "Planned presentation of EAM output in the OneVision hub; implementation contracts are not defined."
+    status: "planned"
+    steps:
+      -
+        id: "provide"
+        capability: "EAM-ENTITY"
+        connection:
+          kind: "unspecified"
+          endpointIds:
+            []
+          note: "Contract to be defined."
+        next:
+          - "present"
+      -
+        id: "present"
+        capability: "ONEVISION-HUB"
+        connection:
+          kind: "internal"
+          endpointIds:
+            []
+          note: "Planned hub presentation."
+        next:
+          []
+    participants:
+      - "EAM"
+      - "ONEVISION"
+  -
+    id: "WF-HUB-HDM"
+    name: "OneVision hub — Hierarchy insight"
+    summary: "Planned presentation of HDM output in the OneVision hub; implementation contracts are not defined."
+    status: "planned"
+    steps:
+      -
+        id: "provide"
+        capability: "HDM-HIER"
+        connection:
+          kind: "unspecified"
+          endpointIds:
+            []
+          note: "Contract to be defined."
+        next:
+          - "present"
+      -
+        id: "present"
+        capability: "ONEVISION-HUB"
+        connection:
+          kind: "internal"
+          endpointIds:
+            []
+          note: "Planned hub presentation."
+        next:
+          []
+    participants:
+      - "HDM"
+      - "ONEVISION"
+  -
+    id: "WF-HUB-KPI"
+    name: "OneVision hub — Performance insight"
+    summary: "Planned presentation of KPI output in the OneVision hub; implementation contracts are not defined."
+    status: "planned"
+    steps:
+      -
+        id: "provide"
+        capability: "KPI-MEASURE"
+        connection:
+          kind: "unspecified"
+          endpointIds:
+            []
+          note: "Contract to be defined."
+        next:
+          - "present"
+      -
+        id: "present"
+        capability: "ONEVISION-HUB"
+        connection:
+          kind: "internal"
+          endpointIds:
+            []
+          note: "Planned hub presentation."
+        next:
+          []
+    participants:
+      - "KPI"
+      - "ONEVISION"

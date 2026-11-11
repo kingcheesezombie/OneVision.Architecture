@@ -5,7 +5,7 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const allowed=x=>typeof x==='string'?x:'';
 const slug=s=>s.toUpperCase().trim().replace(/[^A-Z0-9]+/g,'-').replace(/^-|-$/g,'');
 class ArchitectureProperties{
- constructor(){this.root=null;this.map=null;this.scripts=null;this.selected=null;this.connectMode=false;this.problem=null}
+ constructor(){this.root=null;this.map=null;this.scripts=null;this.selected=null;this.connectMode=false;this.problem=null;this.integrationDraft=null}
  mount(root,map,scripts){
   this.root=root;this.map=map;this.scripts=scripts;this.selected=null;this.connectMode=false;
   root.addEventListener('click',e=>{
@@ -15,7 +15,8 @@ class ArchitectureProperties{
   });
   root.addEventListener('change',e=>{
    const el=e.target.closest('[data-property-field]');if(!el)return;
-   this.setField(el.dataset.propertyField,el.value,el.dataset.index);
+   if(el.dataset.propertyField.startsWith('integration'))this.setIntegrationField(el.dataset.propertyField,el.value);
+   else this.setField(el.dataset.propertyField,el.value,el.dataset.index);
   });
   this.render();
  }
@@ -29,9 +30,9 @@ class ArchitectureProperties{
   if(this.connectMode&&selection?.type==='app'&&this.selected?.type==='source'){
    this.setTarget(selection.id);return;
   }
-  this.connectMode=false;
+  this.connectMode=false;this.integrationDraft=null;
   this.selected=selection?.type==='source'||selection?.type==='app'?{...selection}:null;
-  this.render();
+  this.problem=null;this.render();
  }
  edit(mutator,selectId){
   if(!this.scripts?.drafts['sources.yaml']){this.status('YAML is still loading');return}
@@ -44,8 +45,8 @@ class ArchitectureProperties{
    this.problem=null;this.render();
   }catch(e){this.status('Cannot update YAML: '+e.message)}
  }
- newEntity(){
-  const model=this.model(),target=model?.applications.find(a=>model.capabilities.some(c=>c.provider===a.id)&&a.id!=='ONEVISION'&&a.id!=='UI');
+ newEntity(targetId){
+  const model=this.model(),target=model?.applications.find(a=>a.id===targetId&&model.capabilities.some(c=>c.provider===a.id));
   if(!target){this.status('Add a canonical capability before creating an external entity');return}
   const cap=model.capabilities.find(c=>c.provider===target.id);
   const existing=new Set(this.list().map(x=>x.id));
@@ -95,8 +96,11 @@ class ArchitectureProperties{
   },current.id);
  }
  action(type,index){
-  if(type==='add'){this.newEntity();return}
-  if(type==='close'){this.selected=null;this.connectMode=false;this.map.selection=null;this.map.render();this.render();return}
+  if(type==='add'){if(this.selected?.type==='app')this.newEntity(this.selected.id);return}
+  if(type==='integration'){this.startIntegration();return}
+  if(type==='integration-cancel'){this.integrationDraft=null;this.problem=null;this.render();return}
+  if(type==='integration-create'){this.createIntegration();return}
+  if(type==='close'){this.selected=null;this.connectMode=false;this.integrationDraft=null;this.map.selection=null;this.map.render();this.render();return}
   if(type==='connect'){this.connectMode=!this.connectMode;this.render();return}
   if(type==='cancel-connect'){this.connectMode=false;this.render();return}
   if(type==='add-field'){
@@ -122,21 +126,109 @@ class ArchitectureProperties{
    details?.scrollIntoView({behavior:'smooth',block:'start'});
   }
  }
+
+ startIntegration(){
+  const appId=this.selected?.type==='app'?this.selected.id:null;
+  if(!appId)return;
+  const other=this.model().applications.find(a=>a.id!==appId&&a.id!=='UI'&&this.model().capabilities.some(c=>c.provider===a.id));
+  const sourceCap=this.model().capabilities.find(c=>c.provider===appId);
+  const targetCap=other&&this.model().capabilities.find(c=>c.provider===other.id);
+  if(!other||!sourceCap||!targetCap){this.status('An integration requires two applications with defined capabilities.');return}
+  this.integrationDraft={
+   id:'WF-'+appId+'-'+other.id+'-NEW',
+   name:appId+' to '+other.id+' integration',
+   summary:'Planned capability relationship; implementation contract not yet defined.',
+   targetApp:other.id,sourceCapability:sourceCap.id,targetCapability:targetCap.id
+  };
+  this.problem=null;this.render();
+ }
+ setIntegrationField(field,value){
+  const draft=this.integrationDraft;
+  if(!draft)return;
+  const model=this.model();
+  if(field==='integrationTarget'){
+   const app=model.applications.find(a=>a.id===value);
+   if(!app||value===this.selected.id){this.status('Select a different application.');return}
+   const next=model.capabilities.find(c=>c.provider===value);
+   if(!next){this.status('The receiving application must own a capability.');return}
+   draft.targetApp=value;draft.targetCapability=next.id;
+  }else if(field==='integrationSourceCap'){
+   if(!model.capabilities.some(c=>c.id===value&&c.provider===this.selected.id)){this.status('Select a capability owned by '+this.selected.id);return}
+   draft.sourceCapability=value;
+  }else if(field==='integrationTargetCap'){
+   if(!model.capabilities.some(c=>c.id===value&&c.provider===draft.targetApp)){this.status('Select a capability owned by '+draft.targetApp);return}
+   draft.targetCapability=value;
+  }else if(field==='integrationId')draft.id=slug(value);
+  else if(field==='integrationName')draft.name=value.trim();
+  else if(field==='integrationSummary')draft.summary=value.trim();
+  this.problem=null;this.render();
+ }
+ createIntegration(){
+  const draft=this.integrationDraft;if(!draft)return;
+  const from=this.selected?.id,to=draft.targetApp;
+  const id=slug(draft.id);
+  if(!id||!draft.name.trim()||!draft.summary.trim()){this.status('Integration ID, name and summary are required.');return}
+  const model=this.model();
+  if(!model.applications.some(a=>a.id===from)||!model.applications.some(a=>a.id===to)||from===to){this.status('Choose two distinct applications.');return}
+  if(!model.capabilities.some(c=>c.id===draft.sourceCapability&&c.provider===from)||!model.capabilities.some(c=>c.id===draft.targetCapability&&c.provider===to)){this.status('Choose valid capabilities owned by the participating applications.');return}
+  try{
+   const data=window.jsyaml.load(this.scripts.drafts['workflows.yaml']);
+   if(!Array.isArray(data?.workflows))throw Error('workflows.yaml is missing workflows');
+   if(data.workflows.some(w=>w.id===id))throw Error('Workflow ID already exists: '+id);
+   data.workflows.push({
+    id,name:draft.name,summary:draft.summary,status:'planned',
+    participants:[from,to],
+    steps:[
+     {id:'source',capability:draft.sourceCapability,next:['destination'],connection:{kind:'unspecified',endpointIds:[],note:'Integration contract not yet verified or defined.'}},
+     {id:'destination',capability:draft.targetCapability,next:[],connection:{kind:'unspecified',endpointIds:[],note:'Planned receiving capability; no API endpoint asserted.'}}
+    ]
+   });
+   this.scripts.applyStructuredChange('workflows.yaml',window.jsyaml.dump(data,{lineWidth:-1,noRefs:true,sortKeys:false}));
+   this.integrationDraft=null;this.problem=null;
+   this.map.layers.workflows=true;this.map.layers.planned=true;
+   this.map.selection={type:'edge',id:[from,to].sort().join('|')};
+   this.map.render();this.selected={type:'app',id:from};
+   this.render();
+  }catch(error){this.status('Cannot add integration: '+error.message)}
+ }
+ integrationForm(){
+  const draft=this.integrationDraft,model=this.model(),from=this.selected?.id;if(!draft)return '';
+  const apps=model.applications.filter(a=>a.id!==from&&a.id!=='UI'&&model.capabilities.some(c=>c.provider===a.id));
+  const capsFrom=model.capabilities.filter(c=>c.provider===from);
+  const capsTo=model.capabilities.filter(c=>c.provider===draft.targetApp);
+  const select=(field,label,items,value)=>'<label class="property-field"><span>'+label+'</span><select data-property-field="'+field+'">'+items.map(item=>'<option value="'+esc(item.id)+'" '+(item.id===value?'selected':'')+'>'+esc(item.name||item.id)+' ('+esc(item.id)+')</option>').join('')+'</select></label>';
+  const input=(field,label,value)=>'<label class="property-field"><span>'+label+'</span><input data-property-field="'+field+'" value="'+esc(value)+'"></label>';
+  return '<div class="properties-selected"><strong>New integration from '+esc(from)+'</strong></div>'+
+   '<p class="properties-hint">Create a planned workflow between two application capabilities. This does not claim a live API integration.</p>'+
+   select('integrationTarget','Receiving application',apps,draft.targetApp)+
+   select('integrationSourceCap','Source capability',capsFrom,draft.sourceCapability)+
+   select('integrationTargetCap','Receiving capability',capsTo,draft.targetCapability)+
+   input('integrationId','Workflow ID',draft.id)+input('integrationName','Workflow name',draft.name)+
+   '<label class="property-field"><span>Purpose</span><textarea rows="3" data-property-field="integrationSummary">'+esc(draft.summary)+'</textarea></label>'+
+   '<p class="properties-hint">Status: Planned. API contract: Unspecified. Both can be refined later in the workflow YAML.</p>'+
+   '<div class="properties-actions"><button type="button" data-property-action="integration-cancel">Cancel</button><button type="button" class="properties-add" data-property-action="integration-create">Add integration</button></div>';
+ }
  render(){
   if(!this.root)return;
   const model=this.model(),entry=this.entity();
-  const top='<div class="properties-header"><div><h3>Architecture properties</h3><p>Visual editing updates <code>sources.yaml</code></p></div><button type="button" class="properties-add" data-property-action="add">+ External entity</button></div>';
-  const footer='<div class="properties-footer"><span>'+esc(this.scripts?.changed?'Uncommitted YAML changes':'No unsaved changes')+'</span><button type="button" data-property-action="review" '+(!this.scripts?.changed?'disabled':'')+'>Review &amp; save to GitHub</button></div>';
-  if(this.problem){/* Keep editing available, show issue beneath header. */}
+  const application=this.selected?.type==='app'?model?.applications.find(a=>a.id===this.selected.id):null;
+  const top='<div class="properties-header"><div><h3>'+esc(application?application.name:entry?'External entity':'Architecture')+'</h3><p>'+esc(application?'Application actions':entry?'External entity properties':'Select an application or external entity')+'</p></div></div>';
+  const footer='<div class="properties-footer"><span>'+esc(this.scripts?.changed?'Uncommitted changes':'No unsaved changes')+'</span><button type="button" data-property-action="review" '+(!this.scripts?.changed||!this.scripts?.valid?'disabled':'')+'>Review &amp; save</button></div>';
   let body='';
   if(!model||!this.scripts?.drafts['sources.yaml'])body='<p class="properties-hint">Loading architecture definitions…</p>';
-  else if(!entry){
-   if(this.selected?.type==='app'){
-    const app=model.applications.find(x=>x.id===this.selected.id);
-    body='<p class="properties-hint">'+esc(app?.name||this.selected.id)+' selected. Choose an external entity, or add one and connect it here.</p>';
-   }else body='<p class="properties-hint">Select an external entity in the helicopter map to edit its properties and connection, or choose <strong>+ External entity</strong> to create one.</p>';
+  else if(this.integrationDraft)body=this.integrationForm();
+  else if(application){
+   const available=model.capabilities.some(c=>c.provider===application.id);
+   const number=model.externalMappings.filter(x=>x.targetApp===application.id).length;
+   body='<div class="properties-selected"><strong>'+esc(application.tagline||application.id)+'</strong></div>'+
+    '<p class="properties-hint">'+esc(application.description)+'</p>'+
+    '<div class="properties-context-actions"><button type="button" class="properties-add" data-property-action="add" '+(!available?'disabled':'')+'>+ Add external entity</button>'+
+    '<button type="button" class="properties-add" data-property-action="integration" '+(!available||application.id==='UI'?'disabled':'')+'>+ Add integration</button></div>'+
+    '<p class="properties-hint">'+number+' external mapping'+(number===1?'':'s')+' currently targeted to '+esc(application.id)+'. Select one on the map to edit it.</p>';
+  }else if(!entry){
+   body='<p class="properties-hint">Click an application to add an external entity or integration. Click an external entity to edit or delete it.</p>';
   }else{
-   const input=(field,label,value,readonly=false)=>'<label class="property-field"><span>'+label+'</span><input data-property-field="'+field+'" value="'+esc(value)+'" '+(readonly?'readonly':'')+'></label>';
+   const input=(field,label,value)=>'<label class="property-field"><span>'+label+'</span><input data-property-field="'+field+'" value="'+esc(value)+'"></label>';
    const textarea=(field,label,value)=>'<label class="property-field"><span>'+label+'</span><textarea data-property-field="'+field+'" rows="3">'+esc(value)+'</textarea></label>';
    const options=(items,selected)=>items.map(o=>'<option value="'+esc(o.id)+'" '+(o.id===selected?'selected':'')+'>'+esc(o.id+(o.name?' — '+o.name:''))+'</option>').join('');
    const apps=model.applications.filter(a=>model.capabilities.some(c=>c.provider===a.id)&&a.id!=='UI'&&a.id!=='ONEVISION');
@@ -153,8 +245,9 @@ class ArchitectureProperties{
     '<div class="property-meta"><span>Classification: illustrative example</span><button type="button" data-property-action="delete">Delete entity</button></div>';
   }
   this.root.innerHTML=top+(this.problem?'<div class="properties-error" role="alert">'+esc(this.problem)+'</div>':'')+body+footer;
-  const parent=this.root.parentElement;parent?.classList.toggle('has-properties',!!entry);
+  this.root.parentElement?.classList.toggle('has-properties',!!application||!!entry||!!this.integrationDraft);
  }
+
 }
 window.ArchitectureProperties=ArchitectureProperties;
 })();

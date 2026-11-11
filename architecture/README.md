@@ -67,3 +67,14 @@ The Landscape helicopter map now supports **visual creation and editing of exter
 - Select **Review & save to GitHub** from the properties panel to expand the existing validated commit-review flow; publishing is **never automatic**.
 
 This first release edits *external mappings only*. Canonical application and capability definitions and multi-step workflows remain editable from YAML, as their authoring requires separate governing controls. The underlying source of truth remains YAML, not a new database or an independent diagram document.
+
+## Selection-based right-hand properties inspector
+
+The helicopter map uses one contextual properties panel:
+
+- **Application node:** read-only identity, status, description and application role; contextual actions for creating external mappings and planned integrations.
+- **External entity node:** editable mapping metadata, field examples, target application and target capability, plus delete.
+- **Purple external mapping line:** editable receiving application and target capability; only canonical capabilities owned by the selected application are offered.
+- **Blue or gold application relationship line:** editable workflow name, purpose and existing capability-step assignments. If several workflows share one line, choose which workflow to edit first. Capability dropdowns are restricted to the canonical capabilities owned by the current step's application. Existing step sequence, owners and API contract IDs are preserved; status and API contracts are read-only in this inspector.
+
+All edits update the appropriate YAML draft, show an immediate map preview, and still require the explicit validated **Review & save** action before being committed.

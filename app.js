@@ -96,11 +96,13 @@ function workflowDetail(w){
  h+=section('Participating applications',w.participants.map(id=>linked('application',id,app(id)?.name||id,app(id)?.tagline)).join(''));
  return h;
 }
+const scriptPanel=new window.ArchitectureScriptPanel();
 function renderLandscape(){
  $('toolbar').hidden=false;
- setHeader('Integration landscape','Explore application relationships derived from the suite’s named capability workflows.');
- $('content').innerHTML='<section class="panel integration-map-panel"><div id="integration-map"></div></section>';
- new window.OneVisionIntegrationMap($('integration-map'),state.model,(kind,id)=>nav(kinds[kind],kind,id),{status:state.status,search:state.search});
+ setHeader('Integration landscape','Explore YAML-defined application workflows and external sources. Preview architecture edits beside the helicopter map.');
+ $('content').innerHTML='<section class="panel integration-map-panel"><div class="architecture-workbench"><div class="architecture-map-column"><div id="integration-map"></div></div><aside id="architecture-script-panel" class="architecture-script-panel" aria-label="Architecture YAML script editor"></aside></div></section>';
+ const map=new window.OneVisionIntegrationMap($('integration-map'),state.model,(kind,id)=>nav(kinds[kind],kind,id),{status:state.status,search:state.search});
+ scriptPanel.mount($('architecture-script-panel'),map);
 }
 
 function render(){

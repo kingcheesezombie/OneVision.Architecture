@@ -42,7 +42,7 @@ function edgesFromWorkflows(workflows,model){
 class IntegrationMap{
  constructor(root,model,navigate,filters={}){
   this.root=root;this.model=model;this.navigate=navigate;this.filters=filters;this.selection=null;this.zoom=1;
-  this.layers={workflows:true,external:true,planned:false,standard:true};
+  this.layers={workflows:true,external:true,planned:true,standard:true};
   this.entityClass='all';
   root.addEventListener('click',e=>{
    const el=e.target.closest('[data-map-action],[data-kind],[data-map-app],[data-map-source],[data-map-edge]');
@@ -158,6 +158,19 @@ class IntegrationMap{
    const p=sourcePosition[s.id];if(!p)return '';
    const focus=!this.selection||this.selection.id===s.id||this.selection.type==='app'&&this.selection.id===s.targetApp;
    return '<g class="arch-external-node '+(this.selection?.id===s.id?'selected ':'')+(focus?'':'dimmed')+'" data-map-source="'+esc(s.id)+'" tabindex="0" role="button" aria-label="'+esc(s.name+' example into '+s.targetApp)+'"><rect x="'+(p.x-SW/2)+'" y="'+(p.y-SH/2)+'" width="'+SW+'" height="'+SH+'" rx="9"/><text class="arch-external-name" x="'+p.x+'" y="'+(p.y-3)+'" text-anchor="middle">'+esc(s.name)+'</text><text class="arch-external-sub" x="'+p.x+'" y="'+(p.y+15)+'" text-anchor="middle">'+esc(s.entityClass+' · example')+'</text></g>';
+  }).join('')+'</g>';
+  // Ports must be drawn AFTER all node rectangles, otherwise their visible anchors are hidden behind node fills.
+  svg+='<g class="arch-port-overlays" pointer-events="none">'+edges.map(e=>{
+    const p=this.route(e.from,e.to),planned=e.workflows.every(w=>w.status==='planned');
+    return svgPort(...p.start,planned?'gold':'blue')+svgPort(...p.end,planned?'gold':'blue');
+  }).join('')+sources.map(s=>{
+    const p=sourcePosition[s.id];if(!p||!layouts[s.targetApp])return '';
+    const d=srcOffsets[p.side],a=[p.x+d[0],p.y+d[1]],b=appPort(s.targetApp,p.port);
+    if(s.id==='EXT-IDM-PERSON')b[1]-=16;
+    if(s.id==='EXT-IDM-EPISODE')b[1]+=16;
+    if(s.id==='EXT-EAM-ASSET')b[0]-=28;
+    if(s.id==='EXT-EAM-ATTRIBUTE')b[0]+=28;
+    return svgPort(...a,'purple')+svgPort(...b,'purple');
   }).join('')+'</g></svg>';
   return '<div class="arch-stage">'+svg+'</div>';
  }

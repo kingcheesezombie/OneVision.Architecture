@@ -101,6 +101,7 @@ class IntegrationMap{
   else if(el.dataset.mapSource)this.selection={type:'source',id:el.dataset.mapSource};
   else if(el.dataset.mapEdge)this.selection={type:'edge',id:el.dataset.mapEdge};
   this.render();
+  if(typeof this.onSelect==='function')this.onSelect(this.selection);
  }
  relevant(w){
   if(!this.layers.planned&&w.status==='planned')return false;

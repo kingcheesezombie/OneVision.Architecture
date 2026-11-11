@@ -260,3 +260,22 @@ header p{max-width:850px}
 .architecture-script-expander .architecture-script-panel{border:0;border-radius:0;box-shadow:none;padding:18px 20px}
 .architecture-script-expander .architecture-script-panel textarea{height:400px;font-size:12px}
 @media(max-width:1000px){.architecture-script-expander .architecture-script-panel textarea{height:340px}}
+
+/* GitHub-backed YAML save and review */
+.script-save-section{margin-top:16px;padding:14px;border:1px solid #dbe5f0;border-radius:9px;background:#f6f9fd}
+.script-save-section>strong{font-size:13px;color:#304b68}
+.script-save-section p{color:#6d7e90;font-size:11px;line-height:1.6;margin:7px 0}
+.script-save-section a{color:#276f9c;font-size:11px}
+.script-token-row{display:flex;gap:7px;margin:12px 0 6px}
+.script-token-row input{flex:1;min-width:0;padding:9px;border:1px solid #c9d7e6;background:#fff;border-radius:7px;font-size:12px}
+.script-token-row button,.script-identity button,.script-review-actions button{padding:8px 11px;font-size:11px;background:#fff;color:#3b617e;border:1px solid #cbd8e6;border-radius:7px}
+.script-token-row button:disabled,.script-review-actions button:disabled{opacity:.5;cursor:default}
+.script-identity{font-size:11px;color:#64768a;margin:8px 0}
+.script-connected{color:#22674e;font-weight:650}
+.script-panel-actions .script-save-button,.script-review-actions .script-save-button{background:#286b9f;border-color:#286b9f;color:#fff;font-weight:650}
+.script-panel-actions .script-save-button:hover:not(:disabled),.script-review-actions .script-save-button:hover:not(:disabled){background:#18567e}
+.script-review{margin-top:14px;padding:14px;border-radius:8px;border:1px solid #bcd4e5;background:#fff}
+.script-review h4{margin:0 0 7px;color:#264763;font-size:13px}
+.script-review ul{margin:8px 0 12px;padding-left:20px;font:12px/1.7 ui-monospace,SFMono-Regular,Consolas,monospace;color:#315a78}
+.script-review-actions{display:flex;justify-content:flex-end;gap:9px;flex-wrap:wrap}
+.script-review .script-warning{color:#99471c;font-weight:650}

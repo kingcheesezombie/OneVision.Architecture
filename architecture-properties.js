@@ -5,7 +5,7 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const allowed=x=>typeof x==='string'?x:'';
 const slug=s=>s.toUpperCase().trim().replace(/[^A-Z0-9]+/g,'-').replace(/^-|-$/g,'');
 class ArchitectureProperties{
- constructor(){this.root=null;this.map=null;this.scripts=null;this.selected=null;this.connectMode=false;this.problem=null;this.integrationDraft=null}
+ constructor(){this.root=null;this.map=null;this.scripts=null;this.selected=null;this.connectMode=false;this.problem=null;this.integrationDraft=null;this.workflowId=null}
  mount(root,map,scripts){
   this.root=root;this.map=map;this.scripts=scripts;this.selected=null;this.connectMode=false;
   root.addEventListener('click',e=>{
@@ -15,7 +15,9 @@ class ArchitectureProperties{
   });
   root.addEventListener('change',e=>{
    const el=e.target.closest('[data-property-field]');if(!el)return;
-   if(el.dataset.propertyField.startsWith('integration'))this.setIntegrationField(el.dataset.propertyField,el.value);
+   if(el.dataset.propertyField==='workflowChoice'){this.workflowId=el.value;this.problem=null;this.render();}
+   else if(el.dataset.propertyField.startsWith('workflow'))this.setWorkflowField(el.dataset.propertyField,el.value,el.dataset.index);
+   else if(el.dataset.propertyField.startsWith('integration'))this.setIntegrationField(el.dataset.propertyField,el.value);
    else this.setField(el.dataset.propertyField,el.value,el.dataset.index);
   });
   this.render();
@@ -31,7 +33,9 @@ class ArchitectureProperties{
    this.setTarget(selection.id);return;
   }
   this.connectMode=false;this.integrationDraft=null;
-  this.selected=selection?.type==='source'||selection?.type==='app'?{...selection}:null;
+  const previous=this.selected;
+  this.selected=selection&&['source','source-link','app','edge'].includes(selection.type)?{...selection}:null;
+  if(this.selected?.type!=='edge'||previous?.id!==this.selected.id)this.workflowId=null;
   this.problem=null;this.render();
  }
  edit(mutator,selectId){
@@ -62,7 +66,7 @@ class ArchitectureProperties{
    status:'example'
   }),id);
  }
- entity(){return this.selected?.type==='source'?this.list().find(x=>x.id===this.selected.id):null}
+ entity(){return ['source','source-link'].includes(this.selected?.type)?this.list().find(x=>x.id===this.selected.id):null}
  setField(field,value,index){
   const current=this.entity();if(!current)return;
   if(field==='targetApp'){this.setTarget(value);return}
@@ -97,10 +101,11 @@ class ArchitectureProperties{
  }
  action(type,index){
   if(type==='add'){if(this.selected?.type==='app')this.newEntity(this.selected.id);return}
+  if(type==='open-entity'){this.selected={type:'source',id:this.selected.id};this.map.selection={...this.selected};this.map.render();this.render();return}
   if(type==='integration'){this.startIntegration();return}
   if(type==='integration-cancel'){this.integrationDraft=null;this.problem=null;this.render();return}
   if(type==='integration-create'){this.createIntegration();return}
-  if(type==='close'){this.selected=null;this.connectMode=false;this.integrationDraft=null;this.map.selection=null;this.map.render();this.render();return}
+  if(type==='close'){this.selected=null;this.connectMode=false;this.integrationDraft=null;this.workflowId=null;this.map.selection=null;this.map.render();this.render();return}
   if(type==='connect'){this.connectMode=!this.connectMode;this.render();return}
   if(type==='cancel-connect'){this.connectMode=false;this.render();return}
   if(type==='add-field'){
@@ -208,25 +213,114 @@ class ArchitectureProperties{
    '<p class="properties-hint">Status: Planned. API contract: Unspecified. Both can be refined later in the workflow YAML.</p>'+
    '<div class="properties-actions"><button type="button" data-property-action="integration-cancel">Cancel</button><button type="button" class="properties-add" data-property-action="integration-create">Add integration</button></div>';
  }
+ workflowList(){
+  if(this.selected?.type!=='edge')return [];
+  const edge=this.map.edges().find(e=>e.id===this.selected.id);
+  return edge?.workflows||[];
+ }
+ chosenWorkflow(){
+  const workflows=this.workflowList();
+  return workflows.find(w=>w.id===this.workflowId)||workflows[0]||null;
+ }
+ editWorkflow(mutator){
+  const workflow=this.chosenWorkflow();
+  if(!workflow){this.status('Select a workflow connection first');return}
+  try{
+   const yaml=window.jsyaml.load(this.scripts.drafts['workflows.yaml']);
+   if(!Array.isArray(yaml?.workflows))throw Error('workflows.yaml must define workflows');
+   const target=yaml.workflows.find(w=>w.id===workflow.id);
+   if(!target)throw Error('Workflow is missing from YAML: '+workflow.id);
+   mutator(target);
+   const content=window.jsyaml.dump(yaml,{lineWidth:-1,noRefs:true,sortKeys:false});
+   this.scripts.applyStructuredChange('workflows.yaml',content);
+   this.workflowId=workflow.id;this.problem=null;this.render();
+  }catch(error){this.status('Could not update link: '+error.message)}
+ }
+ setWorkflowField(field,value,index){
+  const w=this.chosenWorkflow();if(!w)return;
+  if(field==='workflowName'||field==='workflowSummary'){
+   if(!value.trim()){this.status('A link name and description are required');return}
+   this.editWorkflow(x=>{x[field==='workflowName'?'name':'summary']=value.trim()});
+   return;
+  }
+  if(field==='workflowStep'){
+   const i=Number(index),step=w.steps[i];
+   if(!step){this.status('Unknown workflow step');return}
+   const original=this.model().capabilities.find(c=>c.id===step.capability);
+   const selected=this.model().capabilities.find(c=>c.id===value);
+   if(!original||!selected||original.provider!==selected.provider){
+    this.status('Select a capability owned by '+(original?.provider||'the current application'));return;
+   }
+   this.editWorkflow(x=>{x.steps[i].capability=value});
+  }
+ }
+ linkForm(){
+  const workflows=this.workflowList(),w=this.chosenWorkflow();
+  if(!w)return '<p class="properties-hint">No visible workflow is associated with this connection.</p>';
+  const caps=this.model().capabilities;
+  const selector=workflows.length>1?
+   '<label class="property-field"><span>Workflow on this link</span><select data-property-field="workflowChoice">'+
+   workflows.map(x=>'<option value="'+esc(x.id)+'" '+(x.id===w.id?'selected':'')+'>'+esc(x.name)+' ('+esc(x.id)+')</option>').join('')+
+   '</select></label>':'';
+  const fields=w.steps.map((step,i)=>{
+   const c=caps.find(x=>x.id===step.capability),owner=c?.provider;
+   const options=caps.filter(x=>x.provider===owner).map(x=>
+     '<option value="'+esc(x.id)+'" '+(x.id===step.capability?'selected':'')+'>'+esc(x.name)+' — '+esc(x.id)+'</option>').join('');
+   return '<label class="property-field"><span>Step '+(i+1)+' · '+esc(owner||'Unknown owner')+'</span>'+
+    '<select data-property-field="workflowStep" data-index="'+i+'">'+options+'</select></label>';
+  }).join('');
+  const endpointIds=[...new Set(w.steps.flatMap(x=>x.connection?.endpointIds||[]))];
+  const endpoints=endpointIds.map(id=>this.model().endpoints.find(x=>x.id===id)).filter(Boolean);
+  return '<div class="properties-selected"><strong>Workflow connection</strong><button type="button" data-property-action="close" aria-label="Close properties">×</button></div>'+
+   '<div class="property-readonly"><span>Between applications</span><strong>'+esc(this.selected.id.split('|').join(' ↔ '))+'</strong></div>'+
+   selector+'<div class="property-readonly"><span>Workflow ID · Read only</span><strong>'+esc(w.id)+'</strong></div>'+
+   '<label class="property-field"><span>Link name</span><input data-property-field="workflowName" value="'+esc(w.name)+'"></label>'+
+   '<label class="property-field"><span>Purpose</span><textarea rows="3" data-property-field="workflowSummary">'+esc(w.summary)+'</textarea></label>'+
+   '<div class="property-readonly"><span>Status · Governed by workflow YAML</span><strong>'+esc(w.status||'established')+'</strong></div>'+
+   '<div class="property-connection"><strong>Approved application capabilities</strong><p>Only capabilities already owned by the application at each step can be selected. The workflow sequence and destination owners remain unchanged.</p>'+
+   fields+'</div>'+
+   '<div class="property-readonly"><span>API contracts · Read only</span><strong>'+esc(endpoints.length?endpoints.map(e=>e.method+' '+e.path).join('; '):'No verified API contract specified')+'</strong></div>'+
+   '<p class="properties-hint">Editing this link updates workflows.yaml. Existing multi-step workflows retain all their steps and connections.</p>';
+ }
+ sourceLinkForm(){
+  const entry=this.entity();
+  if(!entry)return '<p class="properties-hint">Mapping link not found.</p>';
+  const model=this.model();
+  const apps=model.applications.filter(a=>a.id!=='UI'&&a.id!=='ONEVISION'&&model.capabilities.some(c=>c.provider===a.id));
+  const options=(items,selected)=>items.map(x=>'<option value="'+esc(x.id)+'" '+(x.id===selected?'selected':'')+'>'+esc(x.name||x.id)+' ('+esc(x.id)+')</option>').join('');
+  return '<div class="properties-selected"><strong>External mapping link</strong><button type="button" data-property-action="close" aria-label="Close properties">×</button></div>'+
+   '<div class="property-readonly"><span>External entity</span><strong>'+esc(entry.name)+'</strong></div>'+
+   '<label class="property-field"><span>Receiving application</span><select data-property-field="targetApp">'+options(apps,entry.targetApp)+'</select></label>'+
+   '<label class="property-field"><span>Approved target capability</span><select data-property-field="targetCapability">'+options(model.capabilities.filter(c=>c.provider===entry.targetApp),entry.targetCapability)+'</select></label>'+
+   '<p class="properties-hint">Changes are written to sources.yaml. Select the entity box to edit its other properties.</p>'+
+   '<button type="button" class="properties-connect" data-property-action="open-entity">Open entity properties</button>';
+ }
+
  render(){
   if(!this.root)return;
   const model=this.model(),entry=this.entity();
   const application=this.selected?.type==='app'?model?.applications.find(a=>a.id===this.selected.id):null;
-  const top='<div class="properties-header"><div><h3>'+esc(application?application.name:entry?'External entity':'Architecture')+'</h3><p>'+esc(application?'Application actions':entry?'External entity properties':'Select an application or external entity')+'</p></div></div>';
+  const link=this.selected?.type==='edge',sourceLink=this.selected?.type==='source-link';
+  const top='<div class="properties-header"><div><h3>'+esc(link?'Integration link':sourceLink?'External link':application?application.name:entry?'External entity':'Architecture')+'</h3><p>'+esc(link||sourceLink?'Editable link properties':application?'Read-only application details and actions':entry?'Editable external entity properties':'Select any map item or connection')+'</p></div></div>';
   const footer='<div class="properties-footer"><span>'+esc(this.scripts?.changed?'Uncommitted changes':'No unsaved changes')+'</span><button type="button" data-property-action="review" '+(!this.scripts?.changed||!this.scripts?.valid?'disabled':'')+'>Review &amp; save</button></div>';
   let body='';
   if(!model||!this.scripts?.drafts['sources.yaml'])body='<p class="properties-hint">Loading architecture definitions…</p>';
   else if(this.integrationDraft)body=this.integrationForm();
+  else if(link)body=this.linkForm();
+  else if(sourceLink)body=this.sourceLinkForm();
   else if(application){
    const available=model.capabilities.some(c=>c.provider===application.id);
    const number=model.externalMappings.filter(x=>x.targetApp===application.id).length;
    body='<div class="properties-selected"><strong>'+esc(application.tagline||application.id)+'</strong></div>'+
-    '<p class="properties-hint">'+esc(application.description)+'</p>'+
+    '<p class="properties-hint">'+esc(application.description)+'</p>'+ 
+    '<div class="property-readonly"><span>Application ID · Read only</span><strong>'+esc(application.id)+'</strong></div>'+ 
+    '<div class="property-readonly"><span>Application status · Read only</span><strong>'+esc(application.status||'established')+'</strong></div>'+ 
+    '<div class="property-readonly"><span>Application role · Read only</span><strong>'+esc(application.connectionRole||application.nature||application.description)+'</strong></div>'+
     '<div class="properties-context-actions"><button type="button" class="properties-add" data-property-action="add" '+(!available?'disabled':'')+'>+ Add external entity</button>'+
     '<button type="button" class="properties-add" data-property-action="integration" '+(!available||application.id==='UI'?'disabled':'')+'>+ Add integration</button></div>'+
     '<p class="properties-hint">'+number+' external mapping'+(number===1?'':'s')+' currently targeted to '+esc(application.id)+'. Select one on the map to edit it.</p>';
   }else if(!entry){
-   body='<p class="properties-hint">Click an application to add an external entity or integration. Click an external entity to edit or delete it.</p>';
+   body='<p class="properties-hint">Select an application, external entity, or connection line on the map to inspect its properties. Application definitions are read-only here; connections use approved capabilities.</p>';
   }else{
    const input=(field,label,value)=>'<label class="property-field"><span>'+label+'</span><input data-property-field="'+field+'" value="'+esc(value)+'"></label>';
    const textarea=(field,label,value)=>'<label class="property-field"><span>'+label+'</span><textarea data-property-field="'+field+'" rows="3">'+esc(value)+'</textarea></label>';
@@ -245,7 +339,7 @@ class ArchitectureProperties{
     '<div class="property-meta"><span>Classification: illustrative example</span><button type="button" data-property-action="delete">Delete entity</button></div>';
   }
   this.root.innerHTML=top+(this.problem?'<div class="properties-error" role="alert">'+esc(this.problem)+'</div>':'')+body+footer;
-  this.root.parentElement?.classList.toggle('has-properties',!!application||!!entry||!!this.integrationDraft);
+  this.root.parentElement?.classList.toggle('has-properties',!!this.selected||!!this.integrationDraft);
  }
 
 }

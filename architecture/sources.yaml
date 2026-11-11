@@ -1,0 +1,135 @@
+# OneVision architecture source of truth. Edit this file; GitHub Actions generates data/architecture.json.
+externalMappings:
+  -
+    id: "EXT-IDM-PERSON"
+    entityClass: "PERSON"
+    name: "Person record"
+    targetApp: "IDM"
+    targetCapability: "IDM-IDENTITY"
+    sourceExample: "Illustrative HR person dataset"
+    description: "An external person record is matched or resolved to a governed identity."
+    fields:
+      -
+        - "EmployeeNumber"
+        - "Source person identifier"
+      -
+        - "FullName"
+        - "Name matching attribute"
+      -
+        - "DateOfBirth"
+        - "Identity matching attribute"
+    status: "example"
+  -
+    id: "EXT-IDM-EPISODE"
+    entityClass: "EPISODE"
+    name: "Episode record"
+    targetApp: "IDM"
+    targetCapability: "IDM-EPISODE"
+    sourceExample: "Illustrative operational episode feed"
+    description: "Episode-level records are associated with a resolved person."
+    fields:
+      -
+        - "EpisodeRef"
+        - "Source episode identifier"
+      -
+        - "PersonRef"
+        - "Person matching reference"
+      -
+        - "EpisodeDate"
+        - "Episode context"
+    status: "example"
+  -
+    id: "EXT-EAM-ASSET"
+    entityClass: "ASSET"
+    name: "Asset entity"
+    targetApp: "EAM"
+    targetCapability: "EAM-ENTITY"
+    sourceExample: "Active Directory user-name source/type example"
+    description: "Register an external asset with governed source and type lineage before allocation."
+    fields:
+      -
+        - "UserName"
+        - "Entity value"
+      -
+        - "SourceSystem"
+        - "EAM source"
+      -
+        - "EntityType"
+        - "EAM type; class ASSET"
+    status: "example"
+  -
+    id: "EXT-EAM-ATTRIBUTE"
+    entityClass: "ATTRIBUTE"
+    name: "Attribute entity"
+    targetApp: "EAM"
+    targetCapability: "EAM-ENTITY"
+    sourceExample: "Illustrative web-table attribute feed"
+    description: "Register descriptive attributes against a governed source/type combination."
+    fields:
+      -
+        - "Code"
+        - "Entity value"
+      -
+        - "AttributeType"
+        - "EAM type; class ATTRIBUTE"
+      -
+        - "Description"
+        - "Entity description"
+    status: "example"
+  -
+    id: "EXT-HDM-HIER"
+    entityClass: "HIERARCHY_NODE"
+    name: "Hierarchy node"
+    targetApp: "HDM"
+    targetCapability: "HDM-HIER"
+    sourceExample: "Illustrative service hierarchy feed"
+    description: "Map parent-child source structure into an HDM-managed hierarchy."
+    fields:
+      -
+        - "NodeCode"
+        - "Node identifier"
+      -
+        - "ParentCode"
+        - "Parent relationship"
+      -
+        - "NodeName"
+        - "Node display label"
+    status: "example"
+  -
+    id: "EXT-KPI-VALUE"
+    entityClass: "MEASURE_OBSERVATION"
+    name: "KPI observation"
+    targetApp: "KPI"
+    targetCapability: "KPI-MEASURE"
+    sourceExample: "Illustrative aggregate performance dataset"
+    description: "Map source measures, time periods and values into KPI data."
+    fields:
+      -
+        - "MeasureCode"
+        - "KPI definition reference"
+      -
+        - "Period"
+        - "Reporting period"
+      -
+        - "Value"
+        - "Observed measure value"
+    status: "example"
+  -
+    id: "EXT-ODM-UNIT"
+    entityClass: "ORG_UNIT"
+    name: "Organisational unit"
+    targetApp: "ODM"
+    targetCapability: "ODM-NODE-REF"
+    sourceExample: "Illustrative organisational-unit dataset"
+    description: "Map a source organisational identifier to governed ODM node context; supported adapter not verified."
+    fields:
+      -
+        - "OrganisationCode"
+        - "Source organisation identifier"
+      -
+        - "ParentOrganisation"
+        - "Parent node reference"
+      -
+        - "OrganisationName"
+        - "Node label"
+    status: "example"

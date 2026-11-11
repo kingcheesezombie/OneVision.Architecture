@@ -1,0 +1,50 @@
+# OneVision architecture source of truth. Edit this file; GitHub Actions generates data/architecture.json.
+endpoints:
+  -
+    id: "EAM-ENTITY-QUERY"
+    owner: "EAM"
+    method: "GET"
+    path: "/api/v1/entities/query"
+    purpose: "Retrieve paged entities, filtered by type, source, search and inclusion of inactive items."
+    status: "documented"
+    parameters:
+      - "type"
+      - "source"
+      - "search"
+      - "includeInactive"
+      - "page"
+      - "pageSize"
+  -
+    id: "EAM-ALLOCATABLE"
+    owner: "EAM"
+    method: "GET"
+    path: "/api/v1/entities/allocatable"
+    purpose: "Discover paged entities eligible for allocation to a target provider."
+    status: "documented"
+    parameters:
+      - "targetProvider"
+      - "page"
+      - "pageSize"
+  -
+    id: "EAM-ALLOCATION-RULES"
+    owner: "EAM"
+    method: "GET"
+    path: "/api/v1/allocation-rules"
+    purpose: "Retrieve configured allocation rules for a target provider."
+    status: "documented"
+    parameters:
+      - "targetProvider"
+  -
+    id: "EAM-BULK"
+    owner: "EAM"
+    method: "POST"
+    path: "/api/v1/allocations/bulk"
+    purpose: "Submit batches of allocations with entity identity and target information."
+    status: "documented"
+  -
+    id: "EAM-RESOLVE"
+    owner: "EAM"
+    method: "POST"
+    path: "/api/v1/allocations/resolve-and-allocate"
+    purpose: "Resolve a registered entity and allocate it to a target; not the bulk path."
+    status: "documented"

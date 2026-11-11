@@ -46,12 +46,12 @@ class IntegrationMap{
   this.entityClass='all';
   this.syncPositions();
   root.addEventListener('click',e=>{
-   const el=e.target.closest('[data-map-action],[data-kind],[data-map-app],[data-map-source],[data-map-edge]');
+   const el=e.target.closest('[data-map-action],[data-kind],[data-map-app],[data-map-source],[data-map-source-link],[data-map-edge]');
    if(el){e.stopPropagation();this.click(el)}
   });
   root.addEventListener('keydown',e=>{
-   if((e.key==='Enter'||e.key===' ')&&e.target.closest('[data-map-app],[data-map-source],[data-map-edge]')){
-    e.preventDefault();this.click(e.target.closest('[data-map-app],[data-map-source],[data-map-edge]'));
+   if((e.key==='Enter'||e.key===' ')&&e.target.closest('[data-map-app],[data-map-source],[data-map-source-link],[data-map-edge]')){
+    e.preventDefault();this.click(e.target.closest('[data-map-app],[data-map-source],[data-map-source-link],[data-map-edge]'));
    }
   });
   root.addEventListener('change',e=>{
@@ -89,7 +89,7 @@ class IntegrationMap{
   this.model=model;
   this.syncPositions();
   if(this.selection?.type==='app'&&!model.applications.some(a=>a.id===this.selection.id))this.selection=null;
-  if(this.selection?.type==='source'&&!model.externalMappings.some(a=>a.id===this.selection.id))this.selection=null;
+  if(['source','source-link'].includes(this.selection?.type)&&!model.externalMappings.some(a=>a.id===this.selection.id))this.selection=null;
   if(this.selection?.type==='edge'&&!this.edges().some(e=>e.id===this.selection.id))this.selection=null;
   this.render();
  }
@@ -101,6 +101,7 @@ class IntegrationMap{
   else if(a==='zoom-reset')this.zoom=1;
   else if(el.dataset.kind){this.navigate(el.dataset.kind,el.dataset.id);return}
   else if(el.dataset.mapApp)this.selection={type:'app',id:el.dataset.mapApp};
+  else if(el.dataset.mapSourceLink)this.selection={type:'source-link',id:el.dataset.mapSourceLink};
   else if(el.dataset.mapSource)this.selection={type:'source',id:el.dataset.mapSource};
   else if(el.dataset.mapEdge)this.selection={type:'edge',id:el.dataset.mapEdge};
   this.render();
@@ -125,7 +126,7 @@ class IntegrationMap{
   if(!this.selection)return true;
   const s=this.selection;
   if(s.type==='app')return s.id===id;
-  if(s.type==='source')return this.model.externalMappings.find(x=>x.id===s.id)?.targetApp===id;
+  if(s.type==='source'||s.type==='source-link')return this.model.externalMappings.find(x=>x.id===s.id)?.targetApp===id;
   if(s.type==='edge')return s.id.split('|').includes(id);
   return true;
  }
@@ -185,7 +186,7 @@ class IntegrationMap{
    const d=loc.side==='bottom'?'M '+left[0]+' '+left[1]+' C '+left[0]+' '+(left[1]+Math.max(25,dy*.5))+' '+right[0]+' '+(right[1]-35)+' '+right[0]+' '+right[1]:
     'M '+left[0]+' '+left[1]+' C '+(left[0]+Math.max(34,dx*.5))+' '+left[1]+' '+(right[0]-42)+' '+right[1]+' '+right[0]+' '+right[1];
    const focus=!this.selection||this.selection.id===s.id||this.selection.type==='app'&&this.selection.id===s.targetApp;
-   return '<g class="arch-external-edge '+(focus?'':'dimmed')+'" data-map-source="'+esc(s.id)+'"><path class="arch-path-hit" d="'+d+'"/><path class="arch-source-path" d="'+d+'" marker-end="url(#arch-source-arrow)"/>'+svgPort(...left,'purple')+svgPort(...right,'purple')+'</g>';
+   return '<g class="arch-external-edge '+(focus?'':'dimmed')+'" data-map-source-link="'+esc(s.id)+'" tabindex="0" role="button" aria-label="Edit mapping link from '+esc(s.name)+' to '+esc(s.targetApp)+'"><path class="arch-path-hit" d="'+d+'"/><path class="arch-source-path" d="'+d+'" marker-end="url(#arch-source-arrow)"/>'+svgPort(...left,'purple')+svgPort(...right,'purple')+'</g>';
   }).join('')+'</g>';
   svg+='<g class="arch-application-nodes">'+apps.map(a=>{
    const p=layouts[a.id],selected=this.selection?.type==='app'&&this.selection.id===a.id;
@@ -214,7 +215,7 @@ class IntegrationMap{
  details(){
   const s=this.selection,m=this.model;
   if(!s)return '<div class="map-inspect"><strong>Explore the architecture</strong><p>Select an application, external source or workflow connection to inspect it. Circular ports show exactly where each line attaches. Planned relationships are optional and separate from established integrations.</p></div>';
-  if(s.type==='source'){
+  if(s.type==='source'||s.type==='source-link'){
    const x=m.externalMappings.find(y=>y.id===s.id);if(!x)return '';
    const c=cap(m,x.targetCapability);
    return '<div class="map-inspect"><span class="meta">ILLUSTRATIVE EXTERNAL MAPPING</span><h3>'+esc(x.name)+' → '+esc(x.targetApp)+'</h3><p>'+esc(x.description)+'</p><p><strong>Example source:</strong> '+esc(x.sourceExample)+'</p><h4>Example field mappings</h4><div class="map-field-grid">'+x.fields.map(([from,to])=>'<div><code>'+esc(from)+'</code><span>→</span><span>'+esc(to)+'</span></div>').join('')+'</div><h4>Target capability</h4>'+actions('capability',c.id,c.name,c.provider)+'</div>';

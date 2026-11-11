@@ -129,6 +129,26 @@ class ArchitectureScriptPanel{
   this.updateDirty();
   this.renderConnection();
  }
+ applyStructuredChange(file,content){
+  if(!Object.hasOwn(this.drafts,file))throw Error('YAML file is not loaded: '+file);
+  this.drafts[file]=content;this.review=false;this.saveNotice=null;
+  this.changed=FILES.some(([name])=>this.drafts[name]!==this.originals[name]);
+  if(this.root?.querySelector('[data-yaml-editor]')&&this.current===file){
+   this.root.querySelector('[data-yaml-editor]').value=content;
+  }
+  const select=this.root?.querySelector('[data-script-file]');
+  if(select){
+   for(const option of select.options){
+    const spec=FILES.find(([name])=>name===option.value);
+    if(spec)option.textContent=spec[1]+' — '+spec[0]+(this.dirty(spec[0])?' *':'');
+   }
+  }
+  this.preview();
+ }
+ openReview(){
+  if(!this.root)return;
+  this.review=true;this.renderReview();this.root.querySelector('[data-script-review]')?.scrollIntoView({behavior:'smooth',block:'nearest'});
+ }
  choose(file){
   if(!Object.hasOwn(this.drafts,file))return;
   clearTimeout(this.timer);

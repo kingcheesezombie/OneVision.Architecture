@@ -325,16 +325,14 @@ class ArchitectureProperties{
    const input=(field,label,value)=>'<label class="property-field"><span>'+label+'</span><input data-property-field="'+field+'" value="'+esc(value)+'"></label>';
    const textarea=(field,label,value)=>'<label class="property-field"><span>'+label+'</span><textarea data-property-field="'+field+'" rows="3">'+esc(value)+'</textarea></label>';
    const options=(items,selected)=>items.map(o=>'<option value="'+esc(o.id)+'" '+(o.id===selected?'selected':'')+'>'+esc(o.id+(o.name?' — '+o.name:''))+'</option>').join('');
-   const apps=model.applications.filter(a=>model.capabilities.some(c=>c.provider===a.id)&&a.id!=='UI'&&a.id!=='ONEVISION');
    const caps=model.capabilities.filter(c=>c.provider===entry.targetApp);
    const fields=(entry.fields||[]).map(([src,meaning],i)=>'<div class="property-field-row"><input aria-label="Source field '+(i+1)+'" data-property-field="fieldSource" data-index="'+i+'" value="'+esc(src)+'"><input aria-label="Target meaning '+(i+1)+'" data-property-field="fieldMeaning" data-index="'+i+'" value="'+esc(meaning)+'"><button type="button" data-property-action="remove-field" data-index="'+i+'" aria-label="Remove field '+(i+1)+'">×</button></div>').join('');
    body='<div class="properties-selected"><strong>'+esc(entry.name)+'</strong><button type="button" data-property-action="close" aria-label="Close properties">×</button></div>'+
     input('id','Mapping ID',entry.id)+input('entityClass','External entity class',entry.entityClass)+input('name','Display name',entry.name)+textarea('description','Description',entry.description)+input('sourceExample','Example data source',entry.sourceExample)+
-    '<div class="property-connection"><div><strong>Destination connection</strong><p>Choose the receiving application and a capability it owns.</p></div>'+
-    '<label class="property-field"><span>Target application</span><select data-property-field="targetApp">'+options(apps,entry.targetApp)+'</select></label>'+
+    '<div class="property-connection"><div><strong>Destination</strong><p>Automatically connected to the application from which this entity was created.</p></div>'+
+    '<div class="property-readonly"><span>Receiving application · Read only</span><strong>'+esc(model.applications.find(a=>a.id===entry.targetApp)?.name||entry.targetApp)+' ('+esc(entry.targetApp)+')</strong></div>'+
     '<label class="property-field"><span>Target capability</span><select data-property-field="targetCapability">'+options(caps,entry.targetCapability)+'</select></label>'+
-    '<button type="button" class="properties-connect" data-property-action="connect">'+(this.connectMode?'Cancel connecting':'Connect on map')+'</button>'+
-    (this.connectMode?'<p class="properties-connect-hint">Now select a receiving application on the helicopter map.</p>':'')+'</div>'+
+    '<p class="properties-hint">To reconnect this entity to another application, select its purple connection line on the map.</p></div>'+
     '<div class="property-fields"><div class="property-fields-head"><strong>Example field mappings</strong><button type="button" data-property-action="add-field">+ Field</button></div><div class="property-field-headings"><span>Source field</span><span>Target meaning</span></div>'+fields+'</div>'+
     '<div class="property-meta"><span>Classification: illustrative example</span><button type="button" data-property-action="delete">Delete entity</button></div>';
   }

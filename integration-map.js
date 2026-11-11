@@ -44,6 +44,7 @@ class IntegrationMap{
   this.root=root;this.model=model;this.navigate=navigate;this.filters=filters;this.selection=null;this.zoom=1;
   this.layers={workflows:true,external:true,planned:true,standard:true};
   this.entityClass='all';
+  this.syncPositions();
   root.addEventListener('click',e=>{
    const el=e.target.closest('[data-map-action],[data-kind],[data-map-app],[data-map-source],[data-map-edge]');
    if(el){e.stopPropagation();this.click(el)}
@@ -59,8 +60,31 @@ class IntegrationMap{
   });
   this.render();
  }
+ syncPositions(){
+  // Keep the curated initial composition, but ensure new YAML IDs appear in previews.
+  let addedApps=0;
+  for(const app of this.model.applications)if(!layouts[app.id]){
+   layouts[app.id]={x:490+(addedApps%2)*440,y:1100+Math.floor(addedApps/2)*255};
+   addedApps++;
+  }
+  const addedByApp=new Map();
+  for(const src of this.model.externalMappings||[]){
+   if(sourcePosition[src.id])continue;
+   const target=layouts[src.targetApp];if(!target)continue;
+   const index=addedByApp.get(src.targetApp)||0;addedByApp.set(src.targetApp,index+1);
+   const preferred={
+    IDM:{x:155,y:310+index*72,side:'right',port:'left'},
+    EAM:{x:1190+index*182,y:48,side:'bottom',port:'top'},
+    HDM:{x:155,y:670+index*72,side:'right',port:'left'},
+    ODM:{x:1125,y:400+index*72,side:'left',port:'right'},
+    KPI:{x:155,y:930+index*72,side:'right',port:'left'}
+   };
+   sourcePosition[src.id]=preferred[src.targetApp]||{x:target.x-290,y:target.y+index*75,side:'right',port:'left'};
+  }
+ }
  setModel(model){
   this.model=model;
+  this.syncPositions();
   if(this.selection?.type==='app'&&!model.applications.some(a=>a.id===this.selection.id))this.selection=null;
   if(this.selection?.type==='source'&&!model.externalMappings.some(a=>a.id===this.selection.id))this.selection=null;
   if(this.selection?.type==='edge'&&!this.edges().some(e=>e.id===this.selection.id))this.selection=null;
@@ -134,7 +158,9 @@ class IntegrationMap{
  }
  diagram(){
   const edges=this.edges(),sources=this.sources(),apps=this.apps();
-  const view=[(1500-1500/this.zoom)/2,(1020-1020/this.zoom)/2,1500/this.zoom,1020/this.zoom].join(' ');
+  const maxX=Math.max(1500,...apps.map(a=>(layouts[a.id]?.x||0)+125),...sources.map(s=>(sourcePosition[s.id]?.x||0)+110))+30;
+  const maxY=Math.max(1020,...apps.map(a=>(layouts[a.id]?.y||0)+125),...sources.map(s=>(sourcePosition[s.id]?.y||0)+85))+35;
+  const view=[(maxX-maxX/this.zoom)/2,(maxY-maxY/this.zoom)/2,maxX/this.zoom,maxY/this.zoom].join(' ');
   let svg='<svg class="architecture-svg" viewBox="'+view+'" role="group" aria-label="OneVision helicopter architecture map with explicit connection points">'+
     '<defs><marker id="arch-arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L9 4.5 L0 9z" fill="#397da9"/></marker><marker id="arch-planned-arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L9 4.5 L0 9z" fill="#c39b54"/></marker><marker id="arch-source-arrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L8 4 L0 8z" fill="#a47ebc"/></marker></defs>';
   // Paths first, nodes last; node fills mask passing lines and all attachments show explicit ports.

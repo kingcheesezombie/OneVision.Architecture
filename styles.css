@@ -328,3 +328,10 @@ header p{max-width:850px}
 .properties-actions button{border-radius:7px;border:1px solid #c5d4e1;background:white;color:#385872;padding:9px 12px;font-size:12px;cursor:pointer}
 .properties-actions .properties-add{background:#2878aa;color:white;border-color:#2878aa}
 .properties-context-actions+.properties-hint{border-top:1px solid #e0e8f0;padding-top:12px}
+
+/* Read-only governed objects and editable link inspector */
+.property-readonly{display:grid;gap:5px;margin:12px 0;padding:11px 12px;background:#edf2f8;border:1px solid #dbe4ee;border-radius:8px}
+.property-readonly>span{font-size:10px;letter-spacing:.3px;color:#68809a;font-weight:650}
+.property-readonly>strong{font-size:12px;line-height:1.6;color:#31516e;font-weight:600;overflow-wrap:anywhere}
+.arch-external-edge:hover .arch-source-path,.arch-external-edge:focus .arch-source-path{stroke-width:4.5;stroke:#8253a8}
+.arch-external-edge:focus-visible{outline:none;filter:drop-shadow(0 0 6px #a37bbd)}

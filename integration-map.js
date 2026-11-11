@@ -59,6 +59,13 @@ class IntegrationMap{
   });
   this.render();
  }
+ setModel(model){
+  this.model=model;
+  if(this.selection?.type==='app'&&!model.applications.some(a=>a.id===this.selection.id))this.selection=null;
+  if(this.selection?.type==='source'&&!model.externalMappings.some(a=>a.id===this.selection.id))this.selection=null;
+  if(this.selection?.type==='edge'&&!this.edges().some(e=>e.id===this.selection.id))this.selection=null;
+  this.render();
+ }
  click(el){
   const a=el.dataset.mapAction;
   if(a==='clear')this.selection=null;

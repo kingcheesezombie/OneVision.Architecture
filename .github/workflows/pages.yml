@@ -38,6 +38,8 @@ jobs:
           node --check architecture-editor.js
           node --check github-save.js
           node --check vendor/js-yaml.min.js
+      - name: Remove build-only dependencies
+        run: rm -rf node_modules
       - name: Configure Pages
         uses: actions/configure-pages@v5
       - name: Upload generated site

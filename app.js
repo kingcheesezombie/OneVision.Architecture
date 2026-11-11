@@ -100,7 +100,7 @@ const scriptPanel=new window.ArchitectureScriptPanel();
 const properties=new window.ArchitectureProperties();
 function renderLandscape(){
  $('toolbar').hidden=false;
- setHeader('Integration landscape','Select an external entity to edit its properties and connections. Your changes update YAML automatically.');
+ setHeader('Integration landscape','Select an application to add an external entity or integration, or select an external entity to edit or delete it. Changes update YAML drafts automatically.');
  $('content').innerHTML='<section class="panel integration-map-panel"><div class="architecture-workbench"><div class="architecture-map-column"><div id="integration-map"></div><aside id="architecture-properties" class="architecture-properties" aria-label="Architecture visual properties"></aside></div><details class="architecture-script-expander"><summary><span class="script-expander-title">Architecture scripts <small>Generated YAML · Advanced editor</small></span><span class="script-expander-chevron" aria-hidden="true">⌄</span></summary><div id="architecture-script-panel" class="architecture-script-panel" aria-label="Architecture YAML script editor"></div></details></div></section>';
  const map=new window.OneVisionIntegrationMap($('integration-map'),state.model,(kind,id)=>nav(kinds[kind],kind,id),{status:state.status,search:state.search});
  scriptPanel.mount($('architecture-script-panel'),map);

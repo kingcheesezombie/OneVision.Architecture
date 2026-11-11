@@ -70,6 +70,7 @@ class ArchitectureScriptPanel{
  constructor(){
   this.drafts={};this.originals={};this.current='workflows.yaml';
   this.loading=null;this.timer=null;this.root=null;this.map=null;this.error=null;this.changed=false;
+  this.github=new window.OneVisionGitHubSave();this.saving=false;this.review=false;this.saveNotice=null;this.valid=false;
  }
  async load(){
   if(this.loading)return this.loading;
@@ -90,10 +91,11 @@ class ArchitectureScriptPanel{
   });
   root.addEventListener('change',e=>{
    if(e.target.matches('[data-script-file]'))this.choose(e.target.value);
+   if(e.target.matches('[data-github-token]'))this.setToken();
   });
   root.addEventListener('input',e=>{
    if(!e.target.matches('[data-yaml-editor]'))return;
-   this.drafts[this.current]=e.target.value;this.updateDirty();
+   this.drafts[this.current]=e.target.value;this.review=false;this.saveNotice=null;this.updateDirty();
    clearTimeout(this.timer);this.timer=setTimeout(()=>this.preview(),360);
   });
   this.renderLoading();
@@ -107,6 +109,8 @@ class ArchitectureScriptPanel{
   this.changed=FILES.some(([file])=>this.dirty(file));
   const label=this.root?.querySelector('[data-script-dirty]');
   if(label)label.textContent=this.changed?'Uncommitted preview':'Published definition';
+  const save=this.root?.querySelector('[data-script-action="review"]');
+  if(save)save.disabled=!this.changed||!this.valid||this.saving;
   const reset=this.root?.querySelector('[data-script-action="reset"]');if(reset)reset.disabled=!this.dirty(this.current);
  }
  render(){
@@ -115,31 +119,43 @@ class ArchitectureScriptPanel{
     '<div class="script-panel-toolbar"><label>Definition <select data-script-file>'+select+'</select></label><a class="script-github-link" href="https://github.com/kingcheesezombie/OneVision.Architecture/edit/main/architecture/'+encodeURIComponent(this.current)+'" target="_blank" rel="noopener">Edit on GitHub ↗</a></div>'+
     '<textarea data-yaml-editor spellcheck="false" aria-label="Editable YAML source for '+esc(this.current)+'"></textarea>'+
     '<div class="script-status" data-script-status role="status" aria-live="polite"></div>'+
-    '<div class="script-panel-actions"><button type="button" data-script-action="download">Download YAML</button><button type="button" data-script-action="copy">Copy YAML</button><button type="button" data-script-action="reset">Reset this file</button></div>'+
-    '<p class="script-note">Changes preview locally only. They do not publish to GitHub. To save permanently, use <strong>Edit on GitHub</strong> and commit the same content, or download the file.</p>';
+    '<div class="script-panel-actions"><button type="button" data-script-action="download">Download YAML</button><button type="button" data-script-action="copy">Copy YAML</button><button type="button" data-script-action="reset">Reset this file</button><button class="script-save-button" type="button" data-script-action="review" disabled>Review &amp; save to GitHub</button></div>'+
+    '<div class="script-save-section"><strong>GitHub connection</strong><p>For direct publishing, use a fine-grained token restricted to this repository with Contents: Read and write. The token is used only in this tab and is not stored.</p>'+
+    '<div class="script-token-row" data-script-connect><input type="password" autocomplete="off" data-github-token aria-label="GitHub fine-grained personal access token" placeholder="Paste fine-grained token"><button type="button" data-script-action="connect">Connect GitHub</button></div>'+
+    '<div class="script-identity" data-script-identity></div><div data-script-review></div>'+
+    '<a href="https://github.com/settings/personal-access-tokens/new?name=OneVision-Architecture-Editor&target_name=kingcheesezombie&expires_in=30&contents=write" target="_blank" rel="noopener noreferrer">Create a scoped token on GitHub ↗</a>'+
+    '</div><p class="script-note">The preview is local until you explicitly confirm Save to GitHub. Saved changes trigger the GitHub Pages publishing workflow. If saving fails, your drafts are retained.</p>';
   this.root.querySelector('[data-yaml-editor]').value=this.drafts[this.current];
   this.updateDirty();
+  this.renderConnection();
  }
  choose(file){
   if(!Object.hasOwn(this.drafts,file))return;
   clearTimeout(this.timer);
-  this.current=file;this.render();this.preview();
+  this.current=file;this.review=false;this.render();this.preview();
  }
  preview(){
   if(!this.map)return;
   try{
    const model=parseAndValidate(this.drafts);
-   this.error=null;
+   this.error=null;this.valid=true;
    this.map.setModel(model);
    const stat=this.root?.querySelector('[data-script-status]');
    if(stat){stat.className='script-status is-valid';stat.textContent=(this.changed?'Valid changes · Live preview applied':'Valid YAML · Showing published architecture')+' · '+model.workflows.length+' workflows · '+model.externalMappings.length+' external mappings';}
+   this.updateDirty();
   }catch(error){
-   this.error=error.message;
+   this.error=error.message;this.valid=false;this.review=false;
+   this.updateDirty();this.renderReview();
    const stat=this.root?.querySelector('[data-script-status]');
    if(stat){stat.className='script-status is-invalid';stat.textContent='Preview not applied: '+error.message+'. The last valid map remains visible.'}
   }
  }
  action(action){
+  if(action==='connect'){this.connect();return}
+  if(action==='disconnect'){this.github.disconnect();this.review=false;this.renderConnection();return}
+  if(action==='review'){this.review=true;this.renderReview();return}
+  if(action==='cancel-review'){this.review=false;this.renderReview();return}
+  if(action==='confirm-save'){this.commit();return}
   if(action==='reset'){this.drafts[this.current]=this.originals[this.current];this.render();this.preview();return}
   const content=this.drafts[this.current];
   if(action==='copy'){
@@ -151,6 +167,58 @@ class ArchitectureScriptPanel{
    const link=document.createElement('a');link.href=url;link.download=this.current;link.click();URL.revokeObjectURL(url);
    this.flash('Downloaded '+this.current+'. Not published.');
   }
+ }
+
+ changedFiles(){return FILES.map(([file])=>file).filter(file=>this.dirty(file))}
+ setToken(){ /* Token is read only when Connect is clicked, never copied to drafts or storage. */ }
+ renderConnection(){
+  const holder=this.root?.querySelector('[data-script-connect]'),identity=this.root?.querySelector('[data-script-identity]');
+  if(holder)holder.hidden=this.github.connected();
+  if(identity)identity.innerHTML=this.github.connected()?
+   '<span class="script-connected">Connected as '+esc(this.github.login)+'</span> <button type="button" data-script-action="disconnect">Disconnect</button>':
+   '<span>Not connected to GitHub</span>';
+  this.renderReview();
+ }
+ async connect(){
+  const field=this.root?.querySelector('[data-github-token]');if(!field)return;
+  const value=field.value;field.value='';
+  const action=this.root?.querySelector('[data-script-action="connect"]');if(action)action.disabled=true;
+  try{
+   const login=await this.github.connect(value);
+   this.saveNotice='Connected to GitHub as '+login+'. The token is held only in memory.';
+   this.renderConnection();this.flash(this.saveNotice);
+  }catch(err){this.saveNotice=null;this.flash('Connection failed: '+err.message)}
+  finally{if(action)action.disabled=false}
+ }
+ renderReview(){
+  const root=this.root?.querySelector('[data-script-review]');if(!root)return;
+  if(!this.review){root.innerHTML='';return}
+  if(!this.valid||!this.changed){root.innerHTML='<p>Nothing valid to save.</p>';return}
+  const names=this.changedFiles();
+  root.innerHTML='<div class="script-review"><h4>Confirm GitHub commit</h4><p>These '+names.length+' changed YAML file(s) will be committed together on <strong>main</strong>:</p><ul>'+
+   names.map(file=>'<li>'+esc(file)+'</li>').join('')+
+   '</ul><p>The current GitHub versions will be checked before the commit. This will trigger automatic Pages publishing.</p>'+
+   (this.github.connected()?'':'<p class="script-warning">Connect GitHub above to enable saving.</p>')+
+   '<div class="script-review-actions"><button type="button" data-script-action="cancel-review">Cancel</button><button type="button" class="script-save-button" data-script-action="confirm-save" '+(!this.github.connected()||this.saving?'disabled':'')+'>'+(this.saving?'Saving…':'Confirm save to GitHub')+'</button></div></div>';
+ }
+ async commit(){
+  if(this.saving)return;
+  try{parseAndValidate(this.drafts)}catch(e){this.flash('Cannot save invalid YAML: '+e.message);return}
+  if(!this.changed||!this.github.connected())return;
+  const names=this.changedFiles();
+  this.saving=true;this.renderReview();
+  this.flash('Checking GitHub versions and creating one commit for '+names.length+' YAML file(s)…');
+  try{
+   const changes=names.map(file=>({file,content:this.drafts[file]}));
+   const result=await this.github.save(changes,this.originals);
+   for(const file of names)this.originals[file]=this.drafts[file];
+   this.review=false;this.saveNotice='Saved to GitHub: '+result.sha.slice(0,9)+'. GitHub Pages publication has been triggered.';
+   // The published site may still be the previous build; the preview remains the authoritative view of the saved changes.
+   this.render();this.preview();
+   const stat=this.root.querySelector('[data-script-status]');
+   if(stat){stat.className='script-status is-valid';stat.innerHTML=esc(this.saveNotice)+' <a href="'+result.url+'" target="_blank" rel="noopener noreferrer">View commit ↗</a>'}
+  }catch(err){this.flash('Not saved: '+err.message+'. Your edits are preserved.')}
+  finally{this.saving=false;this.renderReview();this.updateDirty()}
  }
  flash(text){const s=this.root?.querySelector('[data-script-status]');if(s)s.textContent=text}
 }

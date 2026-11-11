@@ -32,7 +32,7 @@ function edgesFromWorkflows(workflows,model){
     const to=cap(model,steps.get(nextId)?.capability)?.provider;
     if(!from||!to||from===to)continue;
     const key=[from,to].sort().join('|');
-    if(!edges.has(key))edges.set(key,{id:key,from:key.split('|')[0],to:key.split('|')[1],workflows:[]});
+    if(!edges.has(key))edges.set(key,{id:key,from,to,workflows:[]});
     if(!edges.get(key).workflows.some(x=>x.id===w.id))edges.get(key).workflows.push(w);
    }
   }
@@ -84,7 +84,7 @@ class IntegrationMap{
   const q=(this.filters.search||'').trim().toLowerCase();
   return (this.model.externalMappings||[]).filter(s=>this.entityClass==='all'||s.entityClass===this.entityClass).filter(s=>!q||[s.name,s.entityClass,s.sourceExample,s.targetApp,...s.fields.flat()].join(' ').toLowerCase().includes(q));
  }
- apps(){return this.model.applications.filter(a=>(this.layers.planned||a.status!=='planned')&&(this.layers.standard||a.id!=='UI')).filter(a=>layouts[a.id])}
+ apps(){return this.model.applications.filter(a=>(this.layers.planned||a.status!=='planned'||a.id==='ONEVISION')&&(this.layers.standard||a.id!=='UI')).filter(a=>layouts[a.id])}
  edges(){return edgesFromWorkflows(this.workflows(),this.model)}
  isFocused(id){
   if(!this.selection)return true;
@@ -98,21 +98,22 @@ class IntegrationMap{
  route(a,b){
   const pair=[a,b].sort().join('|');
   const directions={
-   'EAM|IDM':['right','left'],
-   'EAM|HDM':['top','right'],
-   'HDM|ODM':['right','left'],
-   'IDM|ONEVISION':['top','top'],
-   'EAM|ONEVISION':['right','top'],
-   'HDM|ONEVISION':['bottom','bottom'],
-   'KPI|ONEVISION':['right','bottom']
+   'EAM|IDM':{EAM:'left',IDM:'right'},
+   'EAM|HDM':{EAM:'bottom',HDM:'right'},
+   'HDM|ODM':{HDM:'right',ODM:'left'},
+   'IDM|ONEVISION':{IDM:'top',ONEVISION:'top'},
+   'EAM|ONEVISION':{EAM:'right',ONEVISION:'top'},
+   'HDM|ONEVISION':{HDM:'bottom',ONEVISION:'bottom'},
+   'KPI|ONEVISION':{KPI:'right',ONEVISION:'bottom'}
   };
-  const [sa,sb]=directions[a+'|'+b]||directions[pair]||['right','left'];
+  const sides=directions[pair]||{};
+  const [sa,sb]=[sides[a]||'right',sides[b]||'left'];
   const [ax,ay]=appPort(a,sa),[bx,by]=appPort(b,sb);
   let d='M '+ax+' '+ay;
   if(pair==='EAM|IDM'||pair==='HDM|ODM')d+=' L '+bx+' '+by;
   else if(pair==='EAM|HDM'){
    // Quiet diagonal corridor between the two application rows.
-   d+=' C '+(ax+160)+' '+ay+', '+(bx-95)+' '+(by+25)+', '+bx+' '+by;
+   d+=' C '+ax+' '+(ay+110)+', '+(bx+130)+' '+(by-80)+', '+bx+' '+by;
   }else if(pair==='IDM|ONEVISION'){
    d+=' C '+ax+' 85, 1230 85, 1230 380 L '+bx+' '+by;
   }else if(pair==='EAM|ONEVISION'){
@@ -138,6 +139,10 @@ class IntegrationMap{
   svg+='<g class="arch-source-paths">'+sources.map(s=>{
    const loc=sourcePosition[s.id],dest=layouts[s.targetApp];if(!loc||!dest)return '';
    const off=srcOffsets[loc.side],left=[loc.x+off[0],loc.y+off[1]],right=appPort(s.targetApp,loc.port);
+   if(s.id==='EXT-IDM-PERSON')right[1]-=16;
+   if(s.id==='EXT-IDM-EPISODE')right[1]+=16;
+   if(s.id==='EXT-EAM-ASSET')right[0]-=28;
+   if(s.id==='EXT-EAM-ATTRIBUTE')right[0]+=28;
    const dx=right[0]-left[0],dy=right[1]-left[1];
    // Route from the nearest edge, without running across unrelated boxes.
    const d=loc.side==='bottom'?'M '+left[0]+' '+left[1]+' C '+left[0]+' '+(left[1]+Math.max(25,dy*.5))+' '+right[0]+' '+(right[1]-35)+' '+right[0]+' '+right[1]:

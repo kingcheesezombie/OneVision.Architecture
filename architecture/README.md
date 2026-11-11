@@ -54,3 +54,16 @@ The editor validates all six YAML files and displays a review of the changed fil
 **Security:** This is suitable for a personal, explicitly authorised editing session, not unattended automated authentication. Prefer a GitHub App/OAuth server-side integration if this becomes a multi-user tool. The YAML parser is bundled locally at build time; the website no longer loads a third-party parser directly at runtime.
 
 The browser's cross-reference validation is a preview check, not the publishing authority: the Python validator in GitHub Actions remains authoritative. A commit could still fail CI validation; watch the workflow run. Do not commit confidential or personally identifiable information to the public architecture repository.
+
+## Visual entity editor (primary authoring experience)
+
+The Landscape helicopter map now supports **visual creation and editing of external entity mapping examples**, without requiring manual YAML editing:
+
+- Select **+ External entity** to create an example; the properties panel exposes its ID, class, name, description, source example, target application, target capability and example field mappings.
+- Select an existing purple external entity on the map to edit its properties.
+- Set **Target application** and **Target capability** in the properties panel, or click **Connect on map** then select a receiving application. Only an existing capability owned by the target application can be selected.
+- Add, edit or remove source-to-target field examples. An entity must retain at least one example field. Deleting an entity removes its example from the draft after confirmation.
+- Every UI change updates the **draft `architecture/sources.yaml`** and previews the resulting map. The collapsible **Architecture scripts** panel shows the generated YAML and remains available for advanced authoring.
+- Select **Review & save to GitHub** from the properties panel to expand the existing validated commit-review flow; publishing is **never automatic**.
+
+This first release edits *external mappings only*. Canonical application and capability definitions and multi-step workflows remain editable from YAML, as their authoring requires separate governing controls. The underlying source of truth remains YAML, not a new database or an independent diagram document.

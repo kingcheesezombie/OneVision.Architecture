@@ -36,6 +36,7 @@ jobs:
           node --check app.js
           node --check integration-map.js
           node --check architecture-editor.js
+          node --check architecture-properties.js
           node --check github-save.js
           node --check vendor/js-yaml.min.js
       - name: Remove build-only dependencies

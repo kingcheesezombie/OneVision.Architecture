@@ -26,11 +26,18 @@ jobs:
         run: python scripts/build_architecture.py --check
       - name: Generate website architecture JSON from YAML
         run: python scripts/build_architecture.py
+      - name: Install self-hosted YAML parser
+        run: |
+          npm install --no-save --no-package-lock --ignore-scripts js-yaml@4.1.0
+          mkdir -p vendor
+          cp node_modules/js-yaml/dist/js-yaml.min.js vendor/js-yaml.min.js
       - name: Validate website scripts
         run: |
           node --check app.js
           node --check integration-map.js
           node --check architecture-editor.js
+          node --check github-save.js
+          node --check vendor/js-yaml.min.js
       - name: Configure Pages
         uses: actions/configure-pages@v5
       - name: Upload generated site

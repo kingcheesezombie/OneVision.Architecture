@@ -1,0 +1,111 @@
+# OneVision architecture source of truth. Edit this file; GitHub Actions generates data/architecture.json.
+capabilities:
+  -
+    id: "EAM-ENTITY"
+    provider: "EAM"
+    name: "Governed entity catalogue"
+    summary: "Register and retrieve canonical source entities and attributes, preserving source identity and lineage."
+    tags:
+      - "Entities"
+      - "Lineage"
+  -
+    id: "EAM-ALLOC"
+    provider: "EAM"
+    name: "Entity allocation lifecycle"
+    summary: "Associate known entities with consumer targets, including effective dates, allocation state and multiple-target support according to class rules."
+    tags:
+      - "Allocation"
+      - "Temporal"
+  -
+    id: "EAM-BULK"
+    provider: "EAM"
+    name: "Bulk allocations"
+    summary: "Submit multiple allocations efficiently in a single bulk operation."
+    tags:
+      - "Allocation"
+      - "Bulk"
+  -
+    id: "IDM-IDENTITY"
+    provider: "IDM"
+    name: "Person identity and matching"
+    summary: "Resolve and match source information to canonical people with confidence and ambiguity handling."
+    tags:
+      - "People"
+      - "Matching"
+  -
+    id: "IDM-EPISODE"
+    provider: "IDM"
+    name: "Episode association"
+    summary: "Associate episodes and source assets with resolved person records."
+    tags:
+      - "Episodes"
+      - "People"
+  -
+    id: "HDM-HIER"
+    provider: "HDM"
+    name: "Hierarchy management"
+    summary: "Build and maintain hierarchical structures, including templated and snapshot-based views."
+    tags:
+      - "Hierarchies"
+  -
+    id: "KPI-MEASURE"
+    provider: "KPI"
+    name: "Performance and geographic insight"
+    summary: "Present governed KPI measures, values and geographical views."
+    tags:
+      - "KPI"
+      - "Geography"
+  -
+    id: "ONEVISION-HUB"
+    provider: "ONEVISION"
+    name: "Unified suite presentation"
+    summary: "Planned presentation of governed outputs from constituent suite applications."
+    tags:
+      - "Hub"
+    status: "planned"
+  -
+    id: "UI-STANDARD"
+    provider: "UI"
+    name: "Reusable interface patterns"
+    summary: "Common visual and interaction patterns used by suite applications."
+    tags:
+      - "Design system"
+  -
+    id: "EAM-ASSET-RETRIEVE"
+    provider: "EAM"
+    name: "Asset catalogue retrieval"
+    summary: "Expose governed source assets and identifying information to authorised consumers for local reference and matching."
+    tags:
+      - "Assets"
+      - "Catalogue"
+  -
+    id: "IDM-ASSET-CACHE"
+    provider: "IDM"
+    name: "Asset cache synchronisation"
+    summary: "Maintain a local, referenceable cache of EAM assets for identity matching, including the source entity identity."
+    tags:
+      - "Assets"
+      - "Cache"
+  -
+    id: "IDM-ALLOCATION-MATCH"
+    provider: "IDM"
+    name: "Asset-to-person matching"
+    summary: "Evaluate cached EAM assets against IDM people using governed matching rules, confidence and ambiguity checks."
+    tags:
+      - "Matching"
+      - "People"
+  -
+    id: "IDM-ALLOCATION-SUBMIT"
+    provider: "IDM"
+    name: "Bulk allocation submission"
+    summary: "Prepare and submit eligible matched asset-to-person associations to the EAM bulk allocation capability."
+    tags:
+      - "Allocation"
+      - "Orchestration"
+  -
+    id: "ODM-NODE-REF"
+    provider: "ODM"
+    name: "Organisational node reference"
+    summary: "Provide the organisational node identity and structural context needed by consuming applications."
+    tags:
+      - "Organisational context"

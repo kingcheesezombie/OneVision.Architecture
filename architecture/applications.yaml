@@ -1,0 +1,96 @@
+# OneVision architecture source of truth. Edit this file; GitHub Actions generates data/architecture.json.
+applications:
+  -
+    id: "IDM"
+    name: "Identity Data Manager"
+    tagline: "People"
+    description: "Resolves people and associates source entities, assets and episodes with person records."
+    group: "core"
+    nature: "Identity resolution and allocation consumer"
+    connectionRole: "Consumes governed entity data and submits allocations; owns person matching and local asset cache."
+    sourceConfiguration:
+      -
+        type: "Person and episode sources"
+        purpose: "Map source identities and episode attributes into IDM person resolution"
+        detail: "Mapping rules, identifiers and profile configuration"
+      -
+        type: "EAM asset catalogue"
+        purpose: "Populate IDM's local asset cache for candidate matching"
+        detail: "EAM entity type, source, eligibility and paging contract"
+  -
+    id: "EAM"
+    name: "Entity Allocation Manager"
+    tagline: "Things"
+    description: "Governs source entities and attributes, and manages their allocations to consuming systems."
+    group: "core"
+    nature: "Canonical entity and allocation service"
+    connectionRole: "Provides source-governed assets and attributes and target allocation services to other applications."
+    sourceConfiguration:
+      -
+        type: "Governed entity ingestion"
+        purpose: "Register source entities and preserve source/type identity"
+        detail: "Configured source, entity type, class and source identifier"
+      -
+        type: "External source patterns"
+        purpose: "Acquire entities from configured source systems"
+        detail: "Source-specific mapping and profiling; examples include directory and web-table sources"
+  -
+    id: "HDM"
+    name: "Hierarchy Data Manager"
+    tagline: "Structure"
+    description: "Maintains hierarchies and node structures, including mappings to ODM organisational nodes."
+    group: "core"
+    nature: "Hierarchy and organisational structure manager"
+    connectionRole: "Defines hierarchy nodes and relates them to governed organisational identities."
+    sourceConfiguration:
+      -
+        type: "Hierarchy sources"
+        purpose: "Build or refresh governed hierarchy structures"
+        detail: "Structure definitions, node identifiers and mapping rules"
+  -
+    id: "KPI"
+    name: "KPI"
+    tagline: "Measurement"
+    description: "Provides performance measurement, analytic views and geographic intelligence."
+    group: "core"
+    nature: "Measurement and analytical presentation platform"
+    connectionRole: "Publishes performance measures and geographical intelligence for consumption by viewers and the suite hub."
+    sourceConfiguration:
+      -
+        type: "KPI and geography sources"
+        purpose: "Map values, measures, periods and geography"
+        detail: "Source datasets and measurement definitions"
+  -
+    id: "ODM"
+    name: "Organisational Data Manager"
+    tagline: "Organisational context"
+    description: "Provides organisational nodes and contextual structures used by the wider suite."
+    group: "supporting"
+    nature: "Organisational data and node identity authority"
+    connectionRole: "Provides organisational node context used in other applications."
+    sourceConfiguration:
+      -
+        type: "Organisational source mappings"
+        purpose: "Resolve source organisational structure into ODM node identity"
+        detail: "Specific supported adapters and endpoints not yet verified"
+  -
+    id: "ONEVISION"
+    name: "OneVision"
+    tagline: "Suite hub"
+    description: "Planned user-facing hub presenting outputs from the OneVision suite."
+    group: "hub"
+    status: "planned"
+    nature: "Planned suite experience hub"
+    connectionRole: "Will present outputs from the other suite applications rather than own their underlying data."
+    sourceConfiguration:
+      []
+  -
+    id: "UI"
+    name: "OneVision.UI"
+    tagline: "Design standard"
+    description: "Reusable governed UI design system applied across application interfaces, not a data integration provider."
+    group: "standard"
+    nature: "Cross-cutting interface governance standard"
+    connectionRole: "Provides shared patterns and controls as a design/development dependency, not a runtime data connection."
+    sourceConfiguration:
+      []

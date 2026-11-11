@@ -319,3 +319,12 @@ header p{max-width:850px}
 .properties-error{color:#9b342c;background:#fff0eb;border:1px solid #f1d0c9;padding:10px;border-radius:7px;font-size:11px;margin:10px 0;line-height:1.5}
 @media(max-width:1400px){.architecture-map-column.has-properties{grid-template-columns:minmax(0,1fr) 300px}}
 @media(max-width:1080px){.architecture-map-column.has-properties{grid-template-columns:1fr}}
+
+/* Contextual, entity-driven helicopter editing */
+.properties-context-actions{display:grid;gap:9px;margin:18px 0}
+.properties-context-actions button{width:100%;text-align:left;padding:13px 15px;font-size:12px}
+.properties-context-actions button:disabled{opacity:.4;cursor:not-allowed}
+.properties-actions{display:flex;gap:9px;justify-content:flex-end;margin:15px 0}
+.properties-actions button{border-radius:7px;border:1px solid #c5d4e1;background:white;color:#385872;padding:9px 12px;font-size:12px;cursor:pointer}
+.properties-actions .properties-add{background:#2878aa;color:white;border-color:#2878aa}
+.properties-context-actions+.properties-hint{border-top:1px solid #e0e8f0;padding-top:12px}
